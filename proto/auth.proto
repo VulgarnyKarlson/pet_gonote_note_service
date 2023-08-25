@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package auth;
+option go_package = "/proto";
+
+service AuthService {
+    rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
+}
+
+message ValidateTokenRequest {
+    string token = 1;
+}
+
+message ValidateTokenResponse {
+    bool valid = 1;
+    User user = 2;
+}
+
+message User {
+    string id = 1;
+    string username = 2;
+}

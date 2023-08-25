@@ -1,0 +1,28 @@
+Services:
+  Note:
+    MaxTitleLength: 100
+    MaxContentLengt: 1000
+    CreateNotesBatchSize: 5
+Adapters:
+  Auth:
+    Address: "localhost:5000"
+  HTTP:
+    Addr: :3001
+    ReadTimeout: 5
+  RabbitMQ:
+    Host: localhost
+    Port: 5672
+    UserName: user
+    Password: user
+    QueueName: note_service
+  Postgres:
+    Host: localhost
+    Port: 5432
+    UserName: postgres
+    Password: 1234
+    DBName: note_service
+    SSLMode: disable
+    PoolSize: 100
+Common:
+  Logger:
+    Level: info

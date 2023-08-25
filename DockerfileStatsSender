@@ -36,13 +36,10 @@ USER appuser
 WORKDIR /app
 
 # Copy only the necessary files from the builder stage
-COPY --from=builder /go/src/app/bin/main .
+COPY --from=builder /go/src/app/bin/service_note .
+COPY --from=builder /go/src/app/bin/service_stats_sender .
+COPY --from=builder /go/src/app/config/ ./config/
 
-# Set any environment variables required by the application
-ENV HTTP_ADDR=:8080
-
-# Expose the port that the application listens on
-EXPOSE 8080
 
 # Run the binary when the container starts
-CMD ["./main"]
+CMD ["./service_stats_sender"]

@@ -30,7 +30,7 @@ repos:
     hooks:
       - id: go build
         name: go build
-        entry: bash -c 'make build'
+        entry: bash -c 'make build-note && make build-producer'
         language: system
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v8.0.0

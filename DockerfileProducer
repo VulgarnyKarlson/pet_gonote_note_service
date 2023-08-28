@@ -16,7 +16,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go binary
-RUN make build-linux
+RUN make build-producer-linux
 
 # Create a minimal production image
 FROM alpine:latest
@@ -36,7 +36,6 @@ USER appuser
 WORKDIR /app
 
 # Copy only the necessary files from the builder stage
-COPY --from=builder /go/src/app/bin/service_note .
 COPY --from=builder /go/src/app/bin/service_stats_sender .
 COPY --from=builder /go/src/app/config/ ./config/
 

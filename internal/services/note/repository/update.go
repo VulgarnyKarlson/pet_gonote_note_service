@@ -11,7 +11,7 @@ import (
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
-func (r *repositoryImpl) Update(ctx context.Context, user *domain.User, note *domain.Note) error {
+func (r *repositoryImpl) UpdateNote(ctx context.Context, user *domain.User, note *domain.Note) error {
 	tx, err := r.db.NewTransaction(ctx, pgx.TxOptions{})
 	if err != nil {
 		return fmt.Errorf("error creating transaction: %w", err)
@@ -48,7 +48,7 @@ func (r *repositoryImpl) Update(ctx context.Context, user *domain.User, note *do
 		}
 	}
 	if noteID == "" {
-		return fmt.Errorf("can't scan noteID: %s", "note not found")
+		return fmt.Errorf("can't scan noteID: %s", note.ID)
 	}
 
 	err = r.outboxRepo.Update(tx, user, note)

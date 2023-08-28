@@ -18,7 +18,7 @@ const (
 )
 
 func (n NoteOutBoxAction) String() string {
-	return [...]string{"Null", "Create", "Read", "Update", "Delete", "Search"}[n]
+	return [...]string{"Null", "CreateNote", "Read", "UpdateNote", "DeleteNote", "SearchNote"}[n]
 }
 
 type NoteOutbox struct {

@@ -16,69 +16,35 @@ type сreateNoteResponse struct {
 }
 
 func (h *NoteHandlers) CreateNote(r *http.Request) (*adapterHttp.Response, error) {
-	noteRequestChan, noteServiceChan := make(chan *noteRequest), make(chan *domain.Note)
 	user := r.Context().Value(adapterHttp.UserCtxKey).(*domain.User)
+	noteChan, errReadBodyChan := readNotes(r.Context(), r.Body)
+	noteIDsCreatedChan, errCreateChan := h.noteServicePort.Create(r.Context(), user, noteChan)
+	noteCounter, noteIDs := 0, make([]string, 0)
 
-	doneReadChan, errReadChan := readNotes(r.Context(), r.Body, noteRequestChan)
-	noteIDChan, doneCreateChan, errCreateChan := h.noteServicePort.Create(r.Context(), user, noteServiceChan)
-
-	noteCounter := 0
-	noteIDs := make([]string, 0)
-	doneRequestChan := make(chan struct{})
-	errRequestChan := make(chan error)
-
-	go func() {
-		for {
-			select {
-			case <-r.Context().Done():
-				errRequestChan <- customerrors.ErrBadRequest
-				return
-			case err := <-errReadChan:
-				log.Err(err).Msg("error while parsing note json")
-				errRequestChan <- customerrors.Create(customerrors.ErrBadRequest.Code, "invalid-json")
-				return
-			case noteReq := <-noteRequestChan:
-				noteServiceChan <- noteHTTPToDomain(noteReq)
-			case <-doneReadChan:
-				close(noteServiceChan)
-				return
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			select {
-			case noteID := <-noteIDChan:
+	for {
+		select {
+		case <-r.Context().Done():
+			log.Info().Msg("request canceled")
+			return nil, customerrors.ErrBadRequest
+		case err := <-errReadBodyChan:
+			log.Err(err).Msg("error while parsing note json")
+			return nil, customerrors.Create(customerrors.ErrBadRequest.Code, "invalid-json")
+		case err := <-errCreateChan:
+			log.Err(err).Msg("repository error")
+			return nil, customerrors.Create(customerrors.ErrInternalServer.Code, "repository-error")
+		case noteID, ok := <-noteIDsCreatedChan:
+			if ok {
 				noteCounter++
 				noteIDs = append(noteIDs, noteID)
-			case err := <-errCreateChan:
-				log.Err(err).Msg("repository error")
-				errRequestChan <- customerrors.Create(customerrors.ErrInternalServer.Code, "repository-error")
-				return
-			case <-r.Context().Done():
-				errRequestChan <- customerrors.ErrBadRequest
-				return
-			case <-doneCreateChan:
-				doneRequestChan <- struct{}{}
+			} else {
+				return &adapterHttp.Response{
+					Data: &сreateNoteResponse{
+						TotalNotes: noteCounter,
+						NoteIDs:    noteIDs,
+					},
+					Status: http.StatusOK,
+				}, nil
 			}
 		}
-	}()
-
-	select {
-	case <-r.Context().Done():
-		log.Info().Msg("request canceled")
-		return nil, customerrors.ErrBadRequest
-	case err := <-errRequestChan:
-		log.Err(err).Msg("eror while request")
-		return nil, err
-	case <-doneCreateChan:
-		return &adapterHttp.Response{
-			Data: &сreateNoteResponse{
-				TotalNotes: noteCounter,
-				NoteIDs:    noteIDs,
-			},
-			Status: http.StatusOK,
-		}, nil
 	}
 }

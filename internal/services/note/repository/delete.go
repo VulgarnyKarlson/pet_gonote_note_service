@@ -11,7 +11,7 @@ import (
 	"github.com/Masterminds/squirrel"
 )
 
-func (r *repositoryImpl) Delete(ctx context.Context, user *domain.User, id string) (bool, error) {
+func (r *repositoryImpl) DeleteNote(ctx context.Context, user *domain.User, id string) (bool, error) {
 	tx, err := r.db.NewTransaction(ctx, pgx.TxOptions{})
 	if err != nil {
 		return false, fmt.Errorf("error creating transaction: %w", err)

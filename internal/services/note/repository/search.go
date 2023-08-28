@@ -13,7 +13,7 @@ import (
 
 var searchNoteOutbox = &domain.Note{ID: "b40fae8f-7689-a545-d431-14f6374a79cc"}
 
-func (r *repositoryImpl) Search(
+func (r *repositoryImpl) SearchNote(
 	ctx context.Context,
 	user *domain.User,
 	criteria *domain.SearchCriteria,

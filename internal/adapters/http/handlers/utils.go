@@ -45,9 +45,9 @@ func searchCriteriaHTTPToDomain(s *searchNoteRequest) (*domain.SearchCriteria, e
 	}, nil
 }
 
-func readNotes(ctx context.Context, r io.Reader, noteChan chan *noteRequest) (doneChan chan struct{}, errChan chan error) {
+func readNotes(ctx context.Context, r io.Reader) (noteChan chan *domain.Note, errChan chan error) {
 	errChan = make(chan error)
-	doneChan = make(chan struct{})
+	noteChan = make(chan *domain.Note)
 	go func() {
 		decoder := json.NewDecoder(r)
 
@@ -68,7 +68,7 @@ func readNotes(ctx context.Context, r io.Reader, noteChan chan *noteRequest) (do
 				return
 			}
 
-			noteChan <- &note
+			noteChan <- noteHTTPToDomain(&note)
 		}
 
 		if _, err := decoder.Token(); err != nil {
@@ -76,8 +76,8 @@ func readNotes(ctx context.Context, r io.Reader, noteChan chan *noteRequest) (do
 			return
 		}
 
-		close(doneChan)
+		close(noteChan)
 	}()
 
-	return doneChan, errChan
+	return noteChan, errChan
 }

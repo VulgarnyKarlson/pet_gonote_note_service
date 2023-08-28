@@ -14,9 +14,8 @@ type updateNoteResponse struct {
 }
 
 func (h *NoteHandlers) UpdateNote(r *http.Request) (*adapterHttp.Response, error) {
-	noteChan := make(chan *noteRequest)
 	user := r.Context().Value(adapterHttp.UserCtxKey).(*domain.User)
-	doneChan, errChan := readNotes(r.Context(), r.Body, noteChan)
+	noteChan, errChan := readNotes(r.Context(), r.Body)
 	updatesCounter := 0
 	for {
 		select {
@@ -26,21 +25,21 @@ func (h *NoteHandlers) UpdateNote(r *http.Request) (*adapterHttp.Response, error
 		case err := <-errChan:
 			log.Printf("error while parsing note json: %+v", err)
 			return nil, customerrors.Create(customerrors.ErrBadRequest.Code, "invalid-json")
-		case note := <-noteChan:
+		case note, ok := <-noteChan:
+			if !ok {
+				log.Printf("finished reading notes")
+				return &adapterHttp.Response{Data: &updateNoteResponse{TotalNotes: updatesCounter}, Status: http.StatusOK}, nil
+			}
 			updatesCounter++
 			log.Printf("[%d] received node: %+v", updatesCounter, note)
 			if note.ID == "" {
 				log.Error().Msg("note id is empty")
 				return nil, customerrors.Create(customerrors.ErrBadRequest.Code, "invalid-json: note-id-is-empty")
 			}
-			n := noteHTTPToDomain(note)
-			err := h.noteServicePort.Update(r.Context(), user, n)
+			err := h.noteServicePort.Update(r.Context(), user, note)
 			if err != nil {
 				return nil, customerrors.Create(customerrors.ErrBadRequest.Code, err.Error())
 			}
-		case <-doneChan:
-			log.Printf("finished reading notes")
-			return &adapterHttp.Response{Data: &updateNoteResponse{TotalNotes: updatesCounter}, Status: http.StatusOK}, nil
 		}
 	}
 }

@@ -14,18 +14,17 @@ import (
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
-func (r *repositoryImpl) Create(
+func (r *repositoryImpl) CreateNote(
 	ctx context.Context,
 	user *domain.User,
 	noteChan chan *domain.Note,
-) (noteIDs chan string, doneChan chan struct{}, errChan chan error) {
+) (noteIDs chan string, errChan chan error) {
 	noteIDs = make(chan string)
-	doneChan = make(chan struct{})
 	errChan = make(chan error)
 	tx, err := r.db.NewTransaction(ctx, pgx.TxOptions{})
 	if err != nil {
 		errChan <- fmt.Errorf("error creating transaction: %w", err)
-		return noteIDs, doneChan, errChan
+		return noteIDs, errChan
 	}
 
 	go func() {
@@ -63,9 +62,9 @@ func (r *repositoryImpl) Create(
 			errChan <- err
 			return
 		}
-		doneChan <- struct{}{}
+		close(noteIDs)
 	}()
-	return noteIDs, doneChan, errChan
+	return noteIDs, errChan
 }
 
 func (r *repositoryImpl) insertBatch(tx *postgres.Transaction, batch []*domain.Note, user *domain.User, noteIDsChan chan string) error {

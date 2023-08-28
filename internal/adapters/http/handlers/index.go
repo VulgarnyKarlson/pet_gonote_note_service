@@ -3,10 +3,10 @@ package handlers
 import "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 
 type NoteHandlers struct {
-	noteServicePort domain.NoteServicePort
+	noteServicePort domain.NoteService
 }
 
-func New(n domain.NoteServicePort) *NoteHandlers {
+func New(n domain.NoteService) *NoteHandlers {
 	return &NoteHandlers{
 		noteServicePort: n,
 	}

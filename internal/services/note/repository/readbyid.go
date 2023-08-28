@@ -10,7 +10,7 @@ import (
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
-func (r *repositoryImpl) ReadByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error) {
+func (r *repositoryImpl) ReadNoteByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error) {
 	tx, err := r.db.NewTransaction(ctx, pgx.TxOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("error creating transaction: %w", err)

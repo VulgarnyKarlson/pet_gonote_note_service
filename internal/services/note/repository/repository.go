@@ -10,15 +10,15 @@ import (
 )
 
 type Repository interface {
-	Create(
+	CreateNote(
 		ctx context.Context,
 		user *domain.User,
 		noteChan chan *domain.Note,
-	) (noteIDs chan string, doneChan chan struct{}, errChan chan error)
-	ReadByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error)
-	Update(ctx context.Context, user *domain.User, note *domain.Note) error
-	Delete(ctx context.Context, user *domain.User, id string) (bool, error)
-	Search(
+	) (noteIDs chan string, errChan chan error)
+	ReadNoteByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error)
+	UpdateNote(ctx context.Context, user *domain.User, note *domain.Note) error
+	DeleteNote(ctx context.Context, user *domain.User, id string) (bool, error)
+	SearchNote(
 		ctx context.Context,
 		user *domain.User,
 		criteria *domain.SearchCriteria,

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 
 	"github.com/jackc/pgx/v4"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/postgres"
@@ -81,7 +81,7 @@ func (o *OutBoxProducer) Produce(ctx context.Context) (count int, err error) {
 		if errMarshal != nil {
 			return 0, err
 		}
-		err = o.Producer.Publish(txPB, b)
+		err = o.Producer.Publish(ctx, txPB, b)
 		if err != nil {
 			return 0, err
 		}

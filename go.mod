@@ -6,13 +6,13 @@ require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-uuid v1.0.3
-	github.com/jackc/pgconn v1.14.0
+	github.com/jackc/pgconn v1.14.1
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/pkg/errors v0.9.1
+	github.com/rabbitmq/amqp091-go v1.8.1
 	github.com/rs/zerolog v1.30.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.16.0
-	github.com/streadway/amqp v1.1.0
 	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
 )

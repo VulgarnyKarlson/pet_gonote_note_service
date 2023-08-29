@@ -1,9 +1,10 @@
 package rabbitmq
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Publisher struct {
@@ -46,8 +47,8 @@ func (p *Publisher) Tx() (ch *amqp.Channel, err error) {
 	return ch, nil
 }
 
-func (p *Publisher) Publish(ch *amqp.Channel, message []byte) error {
-	return ch.Publish("", p.queue.Name, false, false, amqp.Publishing{
+func (p *Publisher) Publish(ctx context.Context, ch *amqp.Channel, message []byte) error {
+	return ch.PublishWithContext(ctx, "", p.queue.Name, false, false, amqp.Publishing{
 		ContentType: "text/plain",
 		Body:        message,
 	})

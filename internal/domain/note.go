@@ -14,8 +14,15 @@ type Note struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type SearchCriteria struct {
+	Title    string
+	Content  string
+	FromDate time.Time
+	ToDate   time.Time
+}
+
 type NoteService interface {
-	Create(ctx context.Context, user *User, notesChan chan *Note) (noteIDsChan chan string, errChan chan error)
+	Create(ctx context.Context, user *User) (inputNoteChan chan *Note, outputNoteIDsChan chan string, errChan chan error)
 	ReadByID(ctx context.Context, user *User, id string) (*Note, error)
 	Update(ctx context.Context, user *User, note *Note) error
 	Delete(ctx context.Context, user *User, id string) (bool, error)

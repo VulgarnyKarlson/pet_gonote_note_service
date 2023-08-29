@@ -11,29 +11,33 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+type Client interface {
+	ValidateToken(ctx context.Context, token string) (*ValidateTokenResponse, error)
+}
+
 type ValidateTokenResponse struct {
 	User  *domain.User
 	Valid bool
 }
 
-type Wrapper struct {
+type ClientImpl struct {
 	conn    *grpc.ClientConn
 	service proto.AuthServiceClient
 }
 
-func NewWrapper(cnf *Config) *Wrapper {
+func NewWrapper(cnf *Config) *ClientImpl {
 	conn, err := grpc.Dial(cnf.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal().Msgf("Failed to connect to AuthService: %v", err)
 	}
 
-	return &Wrapper{
+	return &ClientImpl{
 		conn:    conn,
 		service: proto.NewAuthServiceClient(conn),
 	}
 }
 
-func (c *Wrapper) ValidateToken(ctx context.Context, token string) (*ValidateTokenResponse, error) {
+func (c *ClientImpl) ValidateToken(ctx context.Context, token string) (*ValidateTokenResponse, error) {
 	resp, err := c.service.ValidateToken(ctx, &proto.ValidateTokenRequest{Token: token})
 	if err != nil {
 		return nil, err
@@ -48,7 +52,7 @@ func (c *Wrapper) ValidateToken(ctx context.Context, token string) (*ValidateTok
 	return validateTokenResponse, nil
 }
 
-func (c *Wrapper) Close() {
+func (c *ClientImpl) Close() {
 	if c.conn != nil {
 		err := c.conn.Close()
 		if err != nil {

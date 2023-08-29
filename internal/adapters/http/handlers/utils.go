@@ -45,9 +45,8 @@ func searchCriteriaHTTPToDomain(s *searchNoteRequest) (*domain.SearchCriteria, e
 	}, nil
 }
 
-func readNotes(ctx context.Context, r io.Reader) (noteChan chan *domain.Note, errChan chan error) {
+func readNotes(ctx context.Context, r io.Reader, noteChan chan<- *domain.Note) (errChan chan error) {
 	errChan = make(chan error)
-	noteChan = make(chan *domain.Note)
 	go func() {
 		decoder := json.NewDecoder(r)
 
@@ -68,6 +67,11 @@ func readNotes(ctx context.Context, r io.Reader) (noteChan chan *domain.Note, er
 				return
 			}
 
+			if note.ID == "" && note.Title == "" {
+				errChan <- fmt.Errorf("id or title must be not empty")
+				return
+			}
+
 			noteChan <- noteHTTPToDomain(&note)
 		}
 
@@ -79,5 +83,5 @@ func readNotes(ctx context.Context, r io.Reader) (noteChan chan *domain.Note, er
 		close(noteChan)
 	}()
 
-	return noteChan, errChan
+	return errChan
 }

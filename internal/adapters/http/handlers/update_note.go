@@ -15,7 +15,8 @@ type updateNoteResponse struct {
 
 func (h *NoteHandlers) UpdateNote(r *http.Request) (*adapterHttp.Response, error) {
 	user := r.Context().Value(adapterHttp.UserCtxKey).(*domain.User)
-	noteChan, errChan := readNotes(r.Context(), r.Body)
+	inputNoteChan := make(chan *domain.Note)
+	errChan := readNotes(r.Context(), r.Body, inputNoteChan)
 	updatesCounter := 0
 	for {
 		select {
@@ -25,7 +26,7 @@ func (h *NoteHandlers) UpdateNote(r *http.Request) (*adapterHttp.Response, error
 		case err := <-errChan:
 			log.Printf("error while parsing note json: %+v", err)
 			return nil, customerrors.Create(customerrors.ErrBadRequest.Code, "invalid-json")
-		case note, ok := <-noteChan:
+		case note, ok := <-inputNoteChan:
 			if !ok {
 				log.Printf("finished reading notes")
 				return &adapterHttp.Response{Data: &updateNoteResponse{TotalNotes: updatesCounter}, Status: http.StatusOK}, nil

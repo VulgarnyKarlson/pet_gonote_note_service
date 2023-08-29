@@ -18,9 +18,10 @@ func NewService(r repository.Repository) domain.NoteService {
 func (s *serviceImpl) Create(
 	ctx context.Context,
 	user *domain.User,
-	note chan *domain.Note,
-) (notes chan string, err chan error) {
-	return s.repo.CreateNote(ctx, user, note)
+) (inputNoteChan chan *domain.Note, outputNoteIDsChan chan string, errChan chan error) {
+	inputNoteChan = make(chan *domain.Note)
+	outputNoteChan, errChan := s.repo.CreateNote(ctx, user, inputNoteChan)
+	return inputNoteChan, outputNoteChan, errChan
 }
 
 func (s *serviceImpl) ReadByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error) {

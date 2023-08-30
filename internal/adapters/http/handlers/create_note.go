@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/rs/zerolog/log"
-	adapterHttp "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
@@ -14,8 +13,8 @@ type сreateNoteResponse struct {
 	TotalNotes int      `json:"total_notes"`
 }
 
-func (h *NoteHandlers) CreateNote(r *http.Request) (*adapterHttp.Response, error) {
-	user := r.Context().Value(adapterHttp.UserCtxKey).(*domain.User)
+func (h *NoteHandlers) CreateNote(r *http.Request) (*domain.HTTPResponse, error) {
+	user := r.Context().Value(domain.UserCtxKey).(*domain.User)
 	inputNoteChan, outputNoteIDsChan, errCreateChan := h.noteServicePort.Create(r.Context(), user)
 	errReadBodyChan := readNotes(r.Context(), r.Body, inputNoteChan)
 	noteCounter, noteIDs := 0, make([]string, 0)
@@ -36,7 +35,7 @@ func (h *NoteHandlers) CreateNote(r *http.Request) (*adapterHttp.Response, error
 				noteCounter++
 				noteIDs = append(noteIDs, noteID)
 			} else {
-				return &adapterHttp.Response{
+				return &domain.HTTPResponse{
 					Data: &сreateNoteResponse{
 						TotalNotes: noteCounter,
 						NoteIDs:    noteIDs,

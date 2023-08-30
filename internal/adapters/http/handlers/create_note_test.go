@@ -14,8 +14,6 @@ import (
 
 	"go.uber.org/mock/gomock"
 
-	adapterHttp "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
-
 	"github.com/stretchr/testify/assert"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
@@ -38,7 +36,7 @@ func TestCreateNote(t *testing.T) {
 		preReqFunc      func()
 		expectedStatus  int
 		expectedErr     string
-		expectedNoteRes *adapterHttp.Response
+		expectedNoteRes *domain.HTTPResponse
 	}{
 		{
 			name:    "Successful case",
@@ -55,7 +53,7 @@ func TestCreateNote(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			expectedErr:    "",
-			expectedNoteRes: &adapterHttp.Response{
+			expectedNoteRes: &domain.HTTPResponse{
 				Data: &сreateNoteResponse{
 					TotalNotes: 1,
 					NoteIDs:    []string{"123"},
@@ -118,7 +116,7 @@ func TestCreateNote(t *testing.T) {
 			noteServicePort: mockNoteService,
 		}
 		t.Run(tt.name, func(t *testing.T) {
-			ctx = context.WithValue(context.Background(), adapterHttp.UserCtxKey, user)
+			ctx = context.WithValue(context.Background(), domain.UserCtxKey, user)
 			if tt.preReqFunc != nil {
 				tt.preReqFunc()
 			}

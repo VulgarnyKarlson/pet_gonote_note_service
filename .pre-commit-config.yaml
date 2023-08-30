@@ -28,6 +28,10 @@ repos:
       - id: go-mod-tidy
   - repo: local
     hooks:
+      - id: go-unit-tests
+        name: go unit tests
+        entry: bash -c 'make test'
+        language: system
       - id: go build
         name: go build
         entry: bash -c 'make build-note && make build-producer'

@@ -61,7 +61,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := &Server{}
+			server := &Server{auth: mockAuthClient}
 
 			req, err := http.NewRequestWithContext(context.TODO(), "GET", "/somepath", http.NoBody)
 			assert.NoError(t, err)
@@ -79,9 +79,7 @@ func TestAuthMiddleware(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			})
-
-			middleware := server.AuthMiddleware(mockAuthClient)
-			middleware(handler).ServeHTTP(rr, req)
+			server.AuthMiddleware(handler).ServeHTTP(rr, req)
 
 			assert.Equal(t, tt.expectedStatusCode, rr.Code)
 		})

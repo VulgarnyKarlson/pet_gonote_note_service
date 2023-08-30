@@ -5,7 +5,6 @@ import (
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 
-	adapterHttp "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 )
 
@@ -14,13 +13,13 @@ type readNoteResponse struct {
 	Content string `json:"content"`
 }
 
-func (h *NoteHandlers) ReadNoteByID(r *http.Request) (*adapterHttp.Response, error) {
+func (h *NoteHandlers) ReadNoteByID(r *http.Request) (*domain.HTTPResponse, error) {
 	noteID := r.URL.Query().Get("note_id")
 	if noteID == "" {
 		return nil, customerrors.Create(http.StatusBadRequest, "Note ID is required")
 	}
 
-	user := r.Context().Value(adapterHttp.UserCtxKey).(*domain.User)
+	user := r.Context().Value(domain.UserCtxKey).(*domain.User)
 	note, err := h.noteServicePort.ReadByID(r.Context(), user, noteID)
 	if err != nil {
 		return nil, customerrors.Create(http.StatusInternalServerError, err.Error())
@@ -35,5 +34,5 @@ func (h *NoteHandlers) ReadNoteByID(r *http.Request) (*adapterHttp.Response, err
 		Content: note.Content,
 	}
 
-	return &adapterHttp.Response{Data: resp, Status: http.StatusOK}, nil
+	return &domain.HTTPResponse{Data: resp, Status: http.StatusOK}, nil
 }

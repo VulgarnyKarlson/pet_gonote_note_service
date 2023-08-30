@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/rs/zerolog/log"
-	adapterHttp "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
@@ -13,8 +12,8 @@ type updateNoteResponse struct {
 	TotalNotes int `json:"total_notes"`
 }
 
-func (h *NoteHandlers) UpdateNote(r *http.Request) (*adapterHttp.Response, error) {
-	user := r.Context().Value(adapterHttp.UserCtxKey).(*domain.User)
+func (h *NoteHandlers) UpdateNote(r *http.Request) (*domain.HTTPResponse, error) {
+	user := r.Context().Value(domain.UserCtxKey).(*domain.User)
 	inputNoteChan := make(chan *domain.Note)
 	errChan := readNotes(r.Context(), r.Body, inputNoteChan)
 	updatesCounter := 0
@@ -29,7 +28,7 @@ func (h *NoteHandlers) UpdateNote(r *http.Request) (*adapterHttp.Response, error
 		case note, ok := <-inputNoteChan:
 			if !ok {
 				log.Printf("finished reading notes")
-				return &adapterHttp.Response{Data: &updateNoteResponse{TotalNotes: updatesCounter}, Status: http.StatusOK}, nil
+				return &domain.HTTPResponse{Data: &updateNoteResponse{TotalNotes: updatesCounter}, Status: http.StatusOK}, nil
 			}
 			updatesCounter++
 			log.Printf("[%d] received node: %+v", updatesCounter, note)

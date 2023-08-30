@@ -17,3 +17,7 @@ func SetupLogger(conf *Config) {
 	}
 	zerolog.SetGlobalLevel(lvl)
 }
+
+func Get() zerolog.Logger {
+	return log.Logger
+}

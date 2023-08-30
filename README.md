@@ -14,7 +14,11 @@
 
 ### Installation
 ```bash
-make run
+make bin-deps
+make up-build
+make up-services
+make migrate-up
+make up
 ```
 
 ## License

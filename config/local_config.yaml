@@ -17,7 +17,7 @@ Adapters:
     QueueName: note_service
   Postgres:
     Host: localhost
-    Port: 5432
+    Port: 65432
     UserName: postgres
     Password: 1234
     DBName: note_service

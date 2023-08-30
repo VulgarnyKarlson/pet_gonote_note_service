@@ -76,8 +76,6 @@ func (r *repositoryImpl) insertBatch(tx *postgres.Transaction, batch []*domain.N
 			return fmt.Errorf("error generating uuid: %w", err)
 		}
 		note.ID = noteID
-		note.CreatedAt = time.Now()
-		note.UpdatedAt = time.Now()
 		query, args, _ := psql.Insert("notes").
 			Columns("id", "user_id", "title", "content", "created_at", "updated_at").
 			Values(note.ID, user.ID, note.Title, note.Content, note.CreatedAt.Format(time.RFC3339), note.UpdatedAt.Format(time.RFC3339)).

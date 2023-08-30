@@ -24,7 +24,7 @@ func (h *NoteHandlers) UpdateNote(r *http.Request) (*domain.HTTPResponse, error)
 			return nil, customerrors.ErrBadRequest
 		case err := <-errChan:
 			log.Printf("error while parsing note json: %+v", err)
-			return nil, customerrors.Create(customerrors.ErrBadRequest.Code, "invalid-json")
+			return nil, customerrors.ErrInvalidJSON
 		case note, ok := <-inputNoteChan:
 			if !ok {
 				log.Printf("finished reading notes")
@@ -34,11 +34,11 @@ func (h *NoteHandlers) UpdateNote(r *http.Request) (*domain.HTTPResponse, error)
 			log.Printf("[%d] received node: %+v", updatesCounter, note)
 			if note.ID == "" {
 				log.Error().Msg("note id is empty")
-				return nil, customerrors.Create(customerrors.ErrBadRequest.Code, "invalid-json: note-id-is-empty")
+				return nil, customerrors.ErrInvalidNoteID
 			}
 			err := h.noteServicePort.Update(r.Context(), user, note)
 			if err != nil {
-				return nil, customerrors.Create(customerrors.ErrBadRequest.Code, err.Error())
+				return nil, err
 			}
 		}
 	}

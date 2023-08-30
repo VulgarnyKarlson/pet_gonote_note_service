@@ -23,13 +23,13 @@ func (h *NoteHandlers) CreateNote(r *http.Request) (*domain.HTTPResponse, error)
 		select {
 		case <-r.Context().Done():
 			log.Info().Msg("request canceled")
-			return nil, customerrors.Create(customerrors.ErrBadRequest.Code, "request-canceled")
+			return nil, customerrors.ErrRequestCanceled
 		case err := <-errReadBodyChan:
 			log.Err(err).Msg("error while parsing note json")
-			return nil, customerrors.Create(customerrors.ErrBadRequest.Code, "invalid-json")
+			return nil, customerrors.ErrInvalidJSON
 		case err := <-errCreateChan:
-			log.Err(err).Msg("repository error")
-			return nil, customerrors.Create(customerrors.ErrInternalServer.Code, "repository-error")
+			log.Err(err).Msg("note service error")
+			return nil, err
 		case noteID, ok := <-outputNoteIDsChan:
 			if ok {
 				noteCounter++

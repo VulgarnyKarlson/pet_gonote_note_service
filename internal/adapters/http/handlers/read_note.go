@@ -15,14 +15,10 @@ type readNoteResponse struct {
 
 func (h *NoteHandlers) ReadNoteByID(r *http.Request) (*domain.HTTPResponse, error) {
 	noteID := r.URL.Query().Get("note_id")
-	if noteID == "" {
-		return nil, customerrors.Create(http.StatusBadRequest, "Note ID is required")
-	}
-
 	user := r.Context().Value(domain.UserCtxKey).(*domain.User)
 	note, err := h.noteServicePort.ReadByID(r.Context(), user, noteID)
 	if err != nil {
-		return nil, customerrors.Create(http.StatusInternalServerError, err.Error())
+		return nil, err
 	}
 
 	if note == nil {

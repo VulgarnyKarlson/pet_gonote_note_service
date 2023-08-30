@@ -21,4 +21,12 @@ var (
 		Code:    http.StatusBadRequest,
 		Message: http.StatusText(http.StatusBadRequest),
 	}
+	ErrInvalidJSON = &HTTPError{
+		Code:    http.StatusBadRequest,
+		Message: "invalid-json",
+	}
+	ErrRequestCanceled = &HTTPError{
+		Code:    http.StatusBadRequest,
+		Message: "request-canceled",
+	}
 )

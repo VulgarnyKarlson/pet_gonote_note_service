@@ -10,19 +10,38 @@ import (
 )
 
 type serviceImpl struct {
+	cfg  *Config
 	repo repository.Repository
 }
 
-func NewService(r repository.Repository) domain.NoteService {
-	return &serviceImpl{repo: r}
+func NewService(cfg *Config, r repository.Repository) domain.NoteService {
+	return &serviceImpl{cfg: cfg, repo: r}
 }
 
 func (s *serviceImpl) Create(
 	ctx context.Context,
 	user *domain.User,
 ) (inputNoteChan chan *domain.Note, outputNoteIDsChan chan string, errChan chan error) {
-	inputNoteChan = make(chan *domain.Note)
-	outputNoteChan, errChan := s.repo.CreateNote(ctx, user, inputNoteChan)
+	var inputProxyNoteChan chan *domain.Note
+	inputNoteChan, inputProxyNoteChan = make(chan *domain.Note), make(chan *domain.Note)
+	outputNoteChan, errChan := s.repo.CreateNote(ctx, user, inputProxyNoteChan)
+	go func() {
+		for note := range inputNoteChan {
+			if len(note.Title) > s.cfg.MaxTitleLength {
+				errChan <- customerrors.ErrTitleTooLong
+				close(inputProxyNoteChan)
+				return
+			}
+			if len(note.Content) > s.cfg.MaxContentLength {
+				errChan <- customerrors.ErrContentTooLong
+				close(inputProxyNoteChan)
+				return
+			}
+			inputProxyNoteChan <- note
+		}
+		close(inputProxyNoteChan)
+	}()
+
 	return inputNoteChan, outputNoteChan, errChan
 }
 

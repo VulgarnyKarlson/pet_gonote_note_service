@@ -28,7 +28,7 @@ func (h *NoteHandlers) SearchNote(r *http.Request) (*domain.HTTPResponse, error)
 	req.ToDate = r.URL.Query().Get("to_date")
 	searchNoteDomain, err := searchCriteriaHTTPToDomain(&req)
 	if err != nil {
-		return nil, customerrors.Create(http.StatusBadRequest, err.Error())
+		return nil, err
 	}
 
 	user := r.Context().Value(domain.UserCtxKey).(*domain.User)

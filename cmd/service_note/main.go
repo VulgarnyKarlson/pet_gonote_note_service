@@ -43,7 +43,7 @@ func mainWithErr() error {
 		&repository.Config{CreateNotesBatchSize: cfg.Services.Note.CreateNotesBatchSize},
 		pgPool, noteOutBoxRepo,
 	)
-	noteService := note.NewService(noteRepo)
+	noteService := note.NewService(cfg.Services.Note, noteRepo)
 	noteHandlers := handlers.New(noteService)
 	authService := auth.NewWrapper(cfg.Adapters.Auth)
 	httpServer := http.NewServer(cfg.Adapters.HTTP, authService, noteHandlers)

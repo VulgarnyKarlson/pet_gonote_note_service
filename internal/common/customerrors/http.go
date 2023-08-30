@@ -1,7 +1,6 @@
 package customerrors
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -23,10 +22,3 @@ var (
 		Message: http.StatusText(http.StatusBadRequest),
 	}
 )
-
-func Create(code int, message string, args ...any) *HTTPError {
-	return &HTTPError{
-		Code:    code,
-		Message: fmt.Sprintf(message, args...),
-	}
-}

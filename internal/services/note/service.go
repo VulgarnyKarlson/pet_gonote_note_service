@@ -3,6 +3,8 @@ package note
 import (
 	"context"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/note/repository"
 )
@@ -25,14 +27,23 @@ func (s *serviceImpl) Create(
 }
 
 func (s *serviceImpl) ReadByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error) {
+	if id == "" {
+		return nil, customerrors.ErrInvalidNoteID
+	}
 	return s.repo.ReadNoteByID(ctx, user, id)
 }
 
 func (s *serviceImpl) Update(ctx context.Context, user *domain.User, note *domain.Note) error {
+	if note.ID == "" {
+		return customerrors.ErrInvalidNoteID
+	}
 	return s.repo.UpdateNote(ctx, user, note)
 }
 
 func (s *serviceImpl) Delete(ctx context.Context, user *domain.User, id string) (bool, error) {
+	if id == "" {
+		return false, customerrors.ErrInvalidNoteID
+	}
 	return s.repo.DeleteNote(ctx, user, id)
 }
 

@@ -35,19 +35,15 @@ func (m *MockNoteService) EXPECT() *MockNoteServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockNoteService) Create(ctx context.Context, user *User) (chan *Note, chan string, chan error) {
+func (m *MockNoteService) Create(ctx context.Context, user *User, st Stream) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", ctx, user)
-	ret0, _ := ret[0].(chan *Note)
-	ret1, _ := ret[1].(chan string)
-	ret2, _ := ret[2].(chan error)
-	return ret0, ret1, ret2
+	m.ctrl.Call(m, "Create", ctx, user, st)
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockNoteServiceMockRecorder) Create(ctx, user interface{}) *gomock.Call {
+func (mr *MockNoteServiceMockRecorder) Create(ctx, user, st interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockNoteService)(nil).Create), ctx, user)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockNoteService)(nil).Create), ctx, user, st)
 }
 
 // Delete mocks base method.

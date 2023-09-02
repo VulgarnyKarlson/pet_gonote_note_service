@@ -21,28 +21,35 @@ func NewService(cfg *Config, r repository.Repository) domain.NoteService {
 func (s *serviceImpl) Create(
 	ctx context.Context,
 	user *domain.User,
-) (inputNoteChan chan *domain.Note, outputNoteIDsChan chan string, errChan chan error) {
-	var inputProxyNoteChan chan *domain.Note
-	inputNoteChan, inputProxyNoteChan = make(chan *domain.Note), make(chan *domain.Note)
-	outputNoteChan, errChan := s.repo.CreateNote(ctx, user, inputProxyNoteChan)
+	st domain.Stream,
+) {
 	go func() {
-		for note := range inputNoteChan {
-			if len(note.Title) > s.cfg.MaxTitleLength {
-				errChan <- customerrors.ErrTitleTooLong
-				close(inputProxyNoteChan)
+		for {
+			select {
+			case <-ctx.Done():
 				return
-			}
-			if len(note.Content) > s.cfg.MaxContentLength {
-				errChan <- customerrors.ErrContentTooLong
-				close(inputProxyNoteChan)
+			case <-st.Done():
 				return
-			}
-			inputProxyNoteChan <- note
-		}
-		close(inputProxyNoteChan)
-	}()
+			case note, ok := <-st.InRead():
+				if !ok {
+					st.InProxyClose()
+					return
+				}
+				if len(note.Title) > s.cfg.MaxTitleLength {
+					st.Fail(customerrors.ErrTitleTooLong)
+					return
+				}
 
-	return inputNoteChan, outputNoteChan, errChan
+				if len(note.Content) > s.cfg.MaxContentLength {
+					st.Fail(customerrors.ErrContentTooLong)
+					return
+				}
+
+				st.InProxyWrite(note)
+			}
+		}
+	}()
+	go s.repo.CreateNote(ctx, user, st)
 }
 
 func (s *serviceImpl) ReadByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error) {

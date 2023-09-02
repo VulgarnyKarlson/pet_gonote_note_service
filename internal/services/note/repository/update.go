@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rs/zerolog/log"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
@@ -44,11 +47,12 @@ func (r *repositoryImpl) UpdateNote(ctx context.Context, user *domain.User, note
 	noteID := ""
 	for rows.Next() {
 		if scanErr := rows.Scan(&noteID); scanErr != nil {
-			return fmt.Errorf("can't scan noteID: %s", scanErr.Error())
+			log.Err(scanErr).Msg("can't scan noteID")
+			return customerrors.ErrNotFoundNoteID
 		}
 	}
 	if noteID == "" {
-		return fmt.Errorf("can't scan noteID: %s", note.ID)
+		return customerrors.ErrNotFoundNoteID
 	}
 
 	err = r.outboxRepo.Update(tx, user, note)

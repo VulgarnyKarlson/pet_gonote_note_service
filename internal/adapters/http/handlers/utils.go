@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"time"
+
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
@@ -45,43 +46,31 @@ func searchCriteriaHTTPToDomain(s *searchNoteRequest) (*domain.SearchCriteria, e
 	}, nil
 }
 
-func readNotes(ctx context.Context, r io.Reader, noteChan chan<- *domain.Note) (errChan chan error) {
-	errChan = make(chan error)
-	go func() {
-		decoder := json.NewDecoder(r)
+func readNotes(r io.Reader, st domain.Stream) error {
+	decoder := json.NewDecoder(r)
+	if delim, err := decoder.Token(); delim != json.Delim('[') || err != nil {
+		return customerrors.ErrInvalidJSONOpenDelimiter
+	}
 
-		if _, err := decoder.Token(); err != nil {
-			errChan <- fmt.Errorf("failed to read opening delimiter: %w", err)
-			return
-		}
-
-		for decoder.More() {
-			if ctx.Err() != nil {
-				errChan <- ctx.Err()
-				return
-			}
-
+	for decoder.More() {
+		select {
+		case <-st.Done():
+			return nil
+		default:
 			var note noteRequest
 			if err := decoder.Decode(&note); err != nil {
-				errChan <- fmt.Errorf("failed to decode opening token: %w", err)
-				return
+				return customerrors.ErrInvalidJSON
 			}
 
-			if note.ID == "" && note.Title == "" {
-				errChan <- fmt.Errorf("id or title must be not empty")
-				return
-			}
-
-			noteChan <- noteHTTPToDomain(&note)
+			st.InWrite(noteHTTPToDomain(&note))
 		}
+	}
 
-		if _, err := decoder.Token(); err != nil {
-			errChan <- fmt.Errorf("failed to read closing delimiter: %w", err)
-			return
-		}
+	if delim, err := decoder.Token(); delim != json.Delim(']') || err != nil {
+		return customerrors.ErrInvalidJSONCloseDelimiter
+	}
 
-		close(noteChan)
-	}()
+	st.InClose()
 
-	return errChan
+	return nil
 }

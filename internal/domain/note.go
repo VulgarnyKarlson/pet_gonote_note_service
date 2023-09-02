@@ -21,8 +21,13 @@ type SearchCriteria struct {
 	ToDate   time.Time
 }
 
+type CreateNoteResult struct {
+	ID  string
+	Err error
+}
+
 type NoteService interface {
-	Create(ctx context.Context, user *User) (inputNoteChan chan *Note, outputNoteIDsChan chan string, errChan chan error)
+	Create(ctx context.Context, user *User, st Stream)
 	ReadByID(ctx context.Context, user *User, id string) (*Note, error)
 	Update(ctx context.Context, user *User, note *Note) error
 	Delete(ctx context.Context, user *User, id string) (bool, error)

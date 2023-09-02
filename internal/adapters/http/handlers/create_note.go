@@ -3,8 +3,9 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/rs/zerolog/log"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
+
+	"github.com/rs/zerolog/log"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
@@ -15,22 +16,32 @@ type сreateNoteResponse struct {
 
 func (h *NoteHandlers) CreateNote(r *http.Request) (*domain.HTTPResponse, error) {
 	user := r.Context().Value(domain.UserCtxKey).(*domain.User)
-	inputNoteChan, outputNoteIDsChan, errCreateChan := h.noteServicePort.Create(r.Context(), user)
-	errReadBodyChan := readNotes(r.Context(), r.Body, inputNoteChan)
+	st, ctx := domain.NewStream(r.Context())
+	defer st.Destroy()
+	h.noteServicePort.Create(ctx, user, st)
+	go func() {
+		err := readNotes(r.Body, st)
+		if err != nil {
+			st.Fail(err)
+		}
+	}()
+
 	noteCounter, noteIDs := 0, make([]string, 0)
 
 	for {
 		select {
-		case <-r.Context().Done():
-			log.Info().Msg("request canceled")
-			return nil, customerrors.ErrRequestCanceled
-		case err := <-errReadBodyChan:
-			log.Err(err).Msg("error while parsing note json")
-			return nil, customerrors.ErrInvalidJSON
-		case err := <-errCreateChan:
-			log.Err(err).Msg("note service error")
+		case <-st.Done():
+			if err := st.Err(); err != nil {
+				if err.Error() == "context canceled" {
+					return nil, customerrors.ErrRequestCanceled
+				}
+				log.Err(err).Msg("error while creating note")
+				return nil, err
+			}
+		case err := <-st.ErrChan():
+			log.Err(err).Msg("error while creating note")
 			return nil, err
-		case noteID, ok := <-outputNoteIDsChan:
+		case noteID, ok := <-st.OutRead():
 			if ok {
 				noteCounter++
 				noteIDs = append(noteIDs, noteID)

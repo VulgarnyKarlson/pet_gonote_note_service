@@ -21,6 +21,14 @@ var (
 		Code:    http.StatusBadRequest,
 		Message: http.StatusText(http.StatusBadRequest),
 	}
+	ErrInvalidJSONOpenDelimiter = &HTTPError{
+		Code:    http.StatusBadRequest,
+		Message: "invalid-json-open-delimiter",
+	}
+	ErrInvalidJSONCloseDelimiter = &HTTPError{
+		Code:    http.StatusBadRequest,
+		Message: "invalid-json-close-delimiter",
+	}
 	ErrInvalidJSON = &HTTPError{
 		Code:    http.StatusBadRequest,
 		Message: "invalid-json",

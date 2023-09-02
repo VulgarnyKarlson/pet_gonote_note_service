@@ -13,8 +13,8 @@ type Repository interface {
 	CreateNote(
 		ctx context.Context,
 		user *domain.User,
-		noteChan chan *domain.Note,
-	) (noteIDs chan string, errChan chan error)
+		st domain.Stream,
+	)
 	ReadNoteByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error)
 	UpdateNote(ctx context.Context, user *domain.User, note *domain.Note) error
 	DeleteNote(ctx context.Context, user *domain.User, id string) (bool, error)

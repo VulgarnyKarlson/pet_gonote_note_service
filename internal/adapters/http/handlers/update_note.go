@@ -14,29 +14,37 @@ type updateNoteResponse struct {
 
 func (h *NoteHandlers) UpdateNote(r *http.Request) (*domain.HTTPResponse, error) {
 	user := r.Context().Value(domain.UserCtxKey).(*domain.User)
-	inputNoteChan := make(chan *domain.Note)
-	errChan := readNotes(r.Context(), r.Body, inputNoteChan)
+	st, ctx := domain.NewStream(r.Context())
+	defer st.Destroy()
+	go func() {
+		err := readNotes(r.Body, st)
+		if err != nil {
+			st.Fail(err)
+		}
+	}()
 	updatesCounter := 0
 	for {
 		select {
 		case <-r.Context().Done():
 			log.Info().Msg("request canceled")
 			return nil, customerrors.ErrBadRequest
-		case err := <-errChan:
-			log.Printf("error while parsing note json: %+v", err)
-			return nil, customerrors.ErrInvalidJSON
-		case note, ok := <-inputNoteChan:
+		case err := <-st.ErrChan():
+			log.Err(err).Msgf("error while updating note: %+v", err)
+			return nil, err
+		case <-st.Done():
+			if err := st.Err(); err != nil {
+				if err.Error() == "context canceled" {
+					return nil, customerrors.ErrRequestCanceled
+				}
+				log.Err(err).Msg("error while updating note")
+				return nil, err
+			}
+		case note, ok := <-st.InRead():
 			if !ok {
-				log.Printf("finished reading notes")
 				return &domain.HTTPResponse{Data: &updateNoteResponse{TotalNotes: updatesCounter}, Status: http.StatusOK}, nil
 			}
 			updatesCounter++
-			log.Printf("[%d] received node: %+v", updatesCounter, note)
-			if note.ID == "" {
-				log.Error().Msg("note id is empty")
-				return nil, customerrors.ErrInvalidNoteID
-			}
-			err := h.noteServicePort.Update(r.Context(), user, note)
+			err := h.noteServicePort.Update(ctx, user, note)
 			if err != nil {
 				return nil, err
 			}

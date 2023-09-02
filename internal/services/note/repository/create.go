@@ -9,65 +9,84 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/hashicorp/go-uuid"
 	"github.com/jackc/pgx/v4"
+	"github.com/rs/zerolog/log"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/postgres"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
 func (r *repositoryImpl) CreateNote(
 	ctx context.Context,
 	user *domain.User,
-	noteChan chan *domain.Note,
-) (noteIDs chan string, errChan chan error) {
-	noteIDs = make(chan string)
-	errChan = make(chan error)
+	st domain.Stream,
+) {
 	tx, err := r.db.NewTransaction(ctx, pgx.TxOptions{})
 	if err != nil {
-		errChan <- fmt.Errorf("error creating transaction: %w", err)
-		return noteIDs, errChan
+		log.Err(err).Msg("error creating transaction")
+		st.Fail(customerrors.ErrRepositoryError)
+		return
 	}
-
-	go func() {
-		defer tx.ConnRelease()
-		defer func() {
-			if err != nil {
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = errors.Join(err, rollbackErr)
-				}
+	var txErr error
+	var isCommitted bool
+	defer tx.ConnRelease()
+	defer func() {
+		if !isCommitted {
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				txErr = errors.Join(txErr, rollbackErr)
 			}
-		}()
+			st.Fail(txErr)
+		}
+	}()
 
-		batch := make([]*domain.Note, 0, r.cfg.CreateNotesBatchSize)
-		for note := range noteChan {
+	batch := make([]*domain.Note, 0, r.cfg.CreateNotesBatchSize)
+loop:
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-st.Done():
+			return
+		case note, ok := <-st.InProxyRead():
+			if !ok {
+				break loop
+			}
 			batch = append(batch, note)
 			if len(batch) == r.cfg.CreateNotesBatchSize {
-				if err = r.insertBatch(tx, batch, user, noteIDs); err != nil {
-					errChan <- err
+				if err = r.insertBatch(tx, batch, user, st); err != nil {
+					txErr = err
 					return
 				}
 
 				batch = batch[:0]
 			}
 		}
+	}
 
-		if len(batch) > 0 {
-			if err = r.insertBatch(tx, batch, user, noteIDs); err != nil {
-				errChan <- err
-				return
-			}
-		}
-
-		if err = tx.Commit(); err != nil {
-			errChan <- err
+	if len(batch) > 0 {
+		if err = r.insertBatch(tx, batch, user, st); err != nil {
+			txErr = err
 			return
 		}
-		close(noteIDs)
-	}()
-	return noteIDs, errChan
+	}
+
+	if err = st.Err(); err != nil {
+		txErr = err
+		return
+	}
+
+	if err = tx.Commit(); err != nil {
+		txErr = err
+		return
+	}
+	isCommitted = true
+
+	st.OutClose()
+	st.Close()
 }
 
-func (r *repositoryImpl) insertBatch(tx *postgres.Transaction, batch []*domain.Note, user *domain.User, noteIDsChan chan string) error {
+func (r *repositoryImpl) insertBatch(tx *postgres.Transaction, batch []*domain.Note, user *domain.User, st domain.Stream) error {
 	noteBatch := &pgx.Batch{}
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	for _, note := range batch {
@@ -100,7 +119,7 @@ func (r *repositoryImpl) insertBatch(tx *postgres.Transaction, batch []*domain.N
 		if err != nil {
 			return fmt.Errorf("error creating note outbox: %w", err)
 		}
-		noteIDsChan <- note.ID
+		st.OutWrite(note.ID)
 	}
 
 	return nil

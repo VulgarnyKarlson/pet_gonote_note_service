@@ -113,9 +113,21 @@ run-note-race: ## run-note-race - with race detector
 run-producer-race: ## run-rpducer-race -  with race detector
 	$(GOCMD) run -race ${CMDPRODUCERPATH} -config ${CONFIG}
 
+.PHONY: unit-test
+unit-test: ## test - run unit tests
+	UNIT_TEST=true $(GOCMD) test -v ./...
+
+.PHONY: integration-test
+integration-test: ## integration-test - run integration tests
+	INTEGRATION_TEST=true $(GOCMD) test -v ./...
+
 .PHONY: test
-test: ## test - run tests
-	$(GOCMD) test -v ./...
+test: ## test - run unit and integration tests
+ifeq ($(shell echo "$(name)" | awk '/unit|integration|e2e|all/ {print "MATCH"}'),MATCH)
+	TEST_TYPE=$(name) $(GOCMD) test -v ./...
+else
+	@echo "You forgot to add test name, example:\nmake test name=unit  (unit, integration, e2e, all)"
+endif
 
 
 .PHONY: help

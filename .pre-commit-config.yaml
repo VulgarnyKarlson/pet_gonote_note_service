@@ -30,7 +30,7 @@ repos:
     hooks:
       - id: go-unit-tests
         name: go unit tests
-        entry: bash -c 'make test'
+        entry: bash -c 'make test name=unit'
         language: system
       - id: go build
         name: go build

@@ -18,6 +18,7 @@ import (
 )
 
 func TestNoteService_Create(t *testing.T) {
+	domain.TestIsUnit(t)
 	defer goleak.VerifyNone(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -107,6 +108,7 @@ func TestNoteService_Create(t *testing.T) {
 }
 
 func TestNoteService_ReadByID(t *testing.T) {
+	domain.TestIsUnit(t)
 	defer goleak.VerifyNone(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -150,6 +152,7 @@ func TestNoteService_ReadByID(t *testing.T) {
 }
 
 func TestNoteService_Update(t *testing.T) {
+	domain.TestIsUnit(t)
 	defer goleak.VerifyNone(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -193,6 +196,7 @@ func TestNoteService_Update(t *testing.T) {
 }
 
 func TestNoteService_Delete(t *testing.T) {
+	domain.TestIsUnit(t)
 	defer goleak.VerifyNone(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -236,6 +240,7 @@ func TestNoteService_Delete(t *testing.T) {
 }
 
 func TestNoteService_Search(t *testing.T) {
+	domain.TestIsUnit(t)
 	defer goleak.VerifyNone(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

@@ -17,6 +17,7 @@ import (
 )
 
 func TestReadNotes(t *testing.T) {
+	domain.TestIsUnit(t)
 	defer goleak.VerifyNone(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

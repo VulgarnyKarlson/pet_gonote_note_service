@@ -12,6 +12,7 @@ import (
 )
 
 func TestValidateToken(t *testing.T) {
+	domain.TestIsUnit(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 

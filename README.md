@@ -12,6 +12,17 @@
 - Every user action with notes (creation, viewing, editing, deleting)
   sends a message to RabbitMQ for further statistics aggregation.
 
+### Code style & hardskill techniques:
+- [x] Hexagonal architecture
+- [x] Dependency Injection ( uber/fx )
+- [x] Transactional outbox (Stats Sender is releasing stats messages from outbox table)
+- [x] Stream processing ( create_note stream read, check and write to db by batch insert )
+- [x] Unit tests ( testify/assert/mockgen ) ( in progress integration and e2e tests )
+- [x] DDD
+- [x] CQRS
+- [x] Pre-commit hooks + golangci-lint
+
+
 ### Installation
 ```bash
 make bin-deps

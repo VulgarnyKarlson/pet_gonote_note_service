@@ -14,12 +14,21 @@ type Publisher struct {
 }
 
 func NewPublisher(cfg *Config) (*Publisher, error) {
-	connString := fmt.Sprintf("amqp://%s:%s@%s:%d/", cfg.UserName, cfg.Password, cfg.Host, cfg.Port)
+	return &Publisher{config: cfg}, nil
+}
+
+func (p *Publisher) Open() error {
+	connString := fmt.Sprintf("amqp://%s:%s@%s:%d/", p.config.UserName, p.config.Password, p.config.Host, p.config.Port)
 	conn, err := amqp.Dial(connString)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &Publisher{conn: conn, config: cfg}, nil
+	p.conn = conn
+	return nil
+}
+
+func (p *Publisher) Close() error {
+	return p.conn.Close()
 }
 
 func (p *Publisher) Tx() (ch *amqp.Channel, err error) {

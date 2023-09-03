@@ -9,7 +9,6 @@ import (
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 
-	"github.com/rs/zerolog/log"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
@@ -39,11 +38,11 @@ func (h *NoteHandlers) CreateNote(r *http.Request) (*adapterHTTP.Response, error
 				if err.Error() == "context canceled" {
 					return nil, customerrors.ErrRequestCanceled
 				}
-				log.Err(err).Msg("error while creating note")
+				h.logger.Err(err).Msg("error while creating note")
 				return nil, err
 			}
 		case err := <-st.ErrChan():
-			log.Err(err).Msg("error while creating note")
+			h.logger.Err(err).Msg("error while creating note")
 			return nil, err
 		case noteID, ok := <-st.OutRead():
 			if ok {

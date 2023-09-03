@@ -142,7 +142,9 @@ issues:
     - path: _test\.go
       linters:
         - gomnd
-
+    - path: internal/common/logger/zerolog.go
+      linters:
+        - gocyclo
     - path: pkg/golinters/errcheck.go
       text: "SA1019: errCfg.Exclude is deprecated: use ExcludeFunctions instead"
     - path: pkg/commands/run.go

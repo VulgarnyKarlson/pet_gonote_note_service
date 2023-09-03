@@ -10,18 +10,17 @@ import (
 )
 
 type Pool struct {
-	ctx  context.Context
 	pool *pgxpool.Pool
 }
 
-func New(ctx context.Context, config *Config) (*Pool, error) {
+func New(config *Config) (*Pool, error) {
 	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable&pool_max_conns=%d",
 		config.UserName, config.Password, config.Host, config.Port, config.DBName, config.PoolSize)
-	dbConn, err := pgxpool.Connect(ctx, dbURL)
+	dbConn, err := pgxpool.Connect(context.TODO(), dbURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to connect to postgres: %w", err)
 	}
-	return &Pool{ctx: ctx, pool: dbConn}, nil
+	return &Pool{pool: dbConn}, nil
 }
 
 func (w *Pool) GetConnection() *pgxpool.Pool {

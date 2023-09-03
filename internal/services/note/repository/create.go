@@ -11,8 +11,6 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/hashicorp/go-uuid"
 	"github.com/jackc/pgx/v4"
-	"github.com/rs/zerolog/log"
-
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/postgres"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
@@ -25,7 +23,7 @@ func (r *repositoryImpl) CreateNote(
 ) {
 	tx, err := r.db.NewTransaction(ctx, pgx.TxOptions{})
 	if err != nil {
-		log.Err(err).Msg("error creating transaction")
+		r.logger.Err(err).Msg("error creating transaction")
 		st.Fail(customerrors.ErrRepositoryError)
 		return
 	}
@@ -98,6 +96,7 @@ func (r *repositoryImpl) insertBatch(tx *postgres.Transaction, notes []*domain.N
 			return fmt.Errorf("error generating uuid: %w", err)
 		}
 		note.SetID(noteID)
+		note.SetUserID(user.ID())
 		domainNote := noteDomainToDBModel(note)
 		mBatch = append(mBatch, domainNote)
 	}

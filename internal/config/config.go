@@ -10,16 +10,16 @@ import (
 )
 
 type Config struct {
-	Common struct {
-		Logger *logger.Config
-	}
 	Services struct {
-		Note *note.Config
-	}
+		Note *note.Config `yaml:"Note"`
+	} `yaml:"Services"`
 	Adapters struct {
-		HTTP     *http.Config
-		Postgres *postgres.Config
-		RabbitMQ *rabbitmq.Config
-		Auth     *auth.Config
-	}
+		HTTP     *http.Config     `yaml:"HTTP"`
+		Postgres *postgres.Config `yaml:"Postgres"`
+		RabbitMQ *rabbitmq.Config `yaml:"RabbitMQ"`
+		Auth     *auth.Config     `yaml:"Auth"`
+	} `yaml:"Adapters"`
+	Common struct {
+		Logger *logger.Config `yaml:"Logger"`
+	} `yaml:"Common"`
 }

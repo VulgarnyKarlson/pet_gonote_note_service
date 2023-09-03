@@ -3,27 +3,30 @@ package http
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog"
 
 	"github.com/gorilla/mux"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/auth"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
-
-	"github.com/rs/zerolog/log"
 )
 
 type Server struct {
+	logger      *zerolog.Logger
 	cfg         *Config
 	auth        auth.Client
 	router      *mux.Router
 	httpAdapter http.Server
 }
 
-func NewServer(cfg *Config, authClient auth.Client) *Server {
+func NewServer(logger *zerolog.Logger, cfg *Config, authClient auth.Client) *Server {
 	router := mux.NewRouter()
 	s := &Server{
+		logger: logger,
 		cfg:    cfg,
 		auth:   authClient,
 		router: router,
@@ -37,18 +40,20 @@ func NewServer(cfg *Config, authClient auth.Client) *Server {
 	return s
 }
 
-func (s *Server) Run() {
-	log.Info().Msgf("Starting HTTP server on %s", s.httpAdapter.Addr)
+func (s *Server) Run() error {
+	s.logger.Info().Msgf("Starting HTTP server on %s", s.httpAdapter.Addr)
 	if err := s.httpAdapter.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatal().Msgf("Failed to listen and serve: %v", err)
+		s.logger.Fatal().Msgf("Failed to listen and serve: %v", err)
 	}
+	return nil
 }
 
-func (s *Server) Stop() {
-	log.Info().Msg("Stopping HTTP server")
+func (s *Server) Stop() error {
+	s.logger.Info().Msg("Stopping HTTP server")
 	if err := s.httpAdapter.Shutdown(nil); err != nil {
-		log.Fatal().Msgf("Failed to shutdown HTTP server: %v", err)
+		return fmt.Errorf("failed to shutdown HTTP server: %v", err)
 	}
+	return nil
 }
 
 func (s *Server) handlerErrors(h func(*http.Request) (*Response, error)) http.HandlerFunc {

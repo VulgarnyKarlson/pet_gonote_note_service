@@ -2,8 +2,9 @@ package auth
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
@@ -12,7 +13,10 @@ import (
 )
 
 type Client interface {
+	SetProtoService(service any)
 	ValidateToken(ctx context.Context, token string) (*ValidateTokenResponse, error)
+	Connect() error
+	Close() error
 }
 
 type ValidateTokenResponse struct {
@@ -23,18 +27,30 @@ type ValidateTokenResponse struct {
 type ClientImpl struct {
 	conn    *grpc.ClientConn
 	service proto.AuthServiceClient
+	logger  *zerolog.Logger
+	config  *Config
 }
 
-func NewWrapper(cnf *Config) *ClientImpl {
-	conn, err := grpc.Dial(cnf.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatal().Msgf("Failed to connect to AuthService: %v", err)
-	}
-
+func NewWrapper(logger *zerolog.Logger, cnf *Config) (Client, error) {
 	return &ClientImpl{
-		conn:    conn,
-		service: proto.NewAuthServiceClient(conn),
+		config: cnf,
+		logger: logger,
+	}, nil
+}
+
+func (c *ClientImpl) SetProtoService(service any) {
+	c.service = service.(proto.AuthServiceClient)
+}
+
+func (c *ClientImpl) Connect() error {
+	conn, err := grpc.Dial(c.config.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return fmt.Errorf("failed to connect to auth service: %w", err)
 	}
+	c.conn = conn
+	c.service = proto.NewAuthServiceClient(conn)
+	c.logger.Info().Msg("connected to auth service")
+	return nil
 }
 
 func (c *ClientImpl) ValidateToken(ctx context.Context, token string) (*ValidateTokenResponse, error) {
@@ -49,12 +65,9 @@ func (c *ClientImpl) ValidateToken(ctx context.Context, token string) (*Validate
 	return validateTokenResponse, nil
 }
 
-func (c *ClientImpl) Close() {
+func (c *ClientImpl) Close() error {
 	if c.conn != nil {
-		err := c.conn.Close()
-		if err != nil {
-			log.Info().Msgf("Failed to close connection: %v", err)
-			return
-		}
+		return c.conn.Close()
 	}
+	return nil
 }

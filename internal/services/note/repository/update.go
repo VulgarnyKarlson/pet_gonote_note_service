@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 
 	"github.com/Masterminds/squirrel"
@@ -28,13 +27,14 @@ func (r *repositoryImpl) UpdateNote(ctx context.Context, user *domain.User, note
 			}
 		}
 	}()
+	note.SetUserID(user.ID())
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	query, args, _ := psql.Update("notes").
 		Set("title", note.Title()).
 		Set("content", note.Content()).
 		Set("updated_at", note.UpdatedAt().Format(time.RFC3339)).
-		Where(squirrel.Eq{"id": note.ID(), "user_id": user.ID()}).
+		Where(squirrel.Eq{"id": note.ID(), "user_id": note.UserID()}).
 		Suffix("RETURNING id").
 		ToSql()
 
@@ -46,7 +46,7 @@ func (r *repositoryImpl) UpdateNote(ctx context.Context, user *domain.User, note
 	noteID := ""
 	for rows.Next() {
 		if scanErr := rows.Scan(&noteID); scanErr != nil {
-			log.Err(scanErr).Msg("can't scan noteID")
+			r.logger.Err(scanErr).Msg("can't scan noteID")
 			return customerrors.ErrNotFoundNoteID
 		}
 	}

@@ -2,40 +2,43 @@ package config
 
 import (
 	"flag"
+	"fmt"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/logger"
-
-	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
+	"go.uber.org/config"
+	"go.uber.org/fx"
+
 	"github.com/spf13/viper"
 )
 
-func Load() (*Config, error) {
+type ResultConfig struct {
+	fx.Out
+
+	Provider config.Provider
+	Config   *Config
+}
+
+func NewConfig() (ResultConfig, error) {
 	path, err := getFilePath()
 	if err != nil {
-		return nil, errors.Wrap(err, "can not get config path")
+		return ResultConfig{}, fmt.Errorf("can not get config path: %w", err)
 	}
 
-	if path == "" {
-		return nil, errors.New("can not load config from empty path")
-	}
-
-	v := viper.New()
-	v.SetConfigFile(path)
-	v.SetConfigType("yaml")
-
-	err = v.ReadInConfig()
+	loader, err := config.NewYAML(config.File(path))
 	if err != nil {
-		return nil, err
+		return ResultConfig{}, fmt.Errorf("can not create config loader: %w", err)
 	}
 
-	config := Config{}
-	err = v.Unmarshal(&config)
+	var cfg Config
+	err = loader.Get("").Populate(&cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "can not unmarshal config from file to struct")
+		return ResultConfig{}, fmt.Errorf("can not populate config: %w", err)
 	}
-	logger.SetupLogger(config.Common.Logger)
-	return &config, nil
+
+	return ResultConfig{
+		Provider: loader,
+		Config:   &cfg,
+	}, nil
 }
 
 func getFilePath() (string, error) {

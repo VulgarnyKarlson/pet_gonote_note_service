@@ -2,7 +2,8 @@ Services:
   Note:
     MaxTitleLength: 100
     MaxContentLength: 1000
-    CreateNotesBatchSize: 5
+    Repository:
+      CreateNotesBatchSize: 5
 Adapters:
   Auth:
     Address: "localhost:5000"

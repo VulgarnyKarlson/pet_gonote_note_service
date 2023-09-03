@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
@@ -53,8 +54,11 @@ func TestValidateToken(t *testing.T) {
 	mockAuthService := proto.NewMockAuthServiceClient(ctrl)
 
 	config := &Config{Address: "localhost:5000"}
-	wrapper := NewWrapper(config)
-	wrapper.service = mockAuthService
+	wrapper, err := NewWrapper(&log.Logger, config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wrapper.SetProtoService(mockAuthService)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

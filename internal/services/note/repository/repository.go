@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/rs/zerolog"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/noteoutbox"
@@ -31,8 +32,14 @@ type repositoryImpl struct {
 	cfg        *Config
 	db         *postgres.Pool
 	outboxRepo noteoutbox.Repository
+	logger     *zerolog.Logger
 }
 
-func NewRepository(cfg *Config, db *postgres.Pool, outboxRepo noteoutbox.Repository) Repository {
-	return &repositoryImpl{cfg: cfg, db: db, outboxRepo: outboxRepo}
+func NewRepository(
+	logger *zerolog.Logger,
+	cfg *Config,
+	db *postgres.Pool,
+	outboxRepo noteoutbox.Repository,
+) Repository {
+	return &repositoryImpl{logger: logger, cfg: cfg, db: db, outboxRepo: outboxRepo}
 }

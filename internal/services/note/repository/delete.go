@@ -45,8 +45,9 @@ func (r *repositoryImpl) DeleteNote(ctx context.Context, user *domain.User, id s
 		return false, nil
 	}
 
-	var note *domain.Note
+	note := new(domain.Note)
 	note.SetID(id)
+	note.SetUserID(user.ID())
 	err = r.outboxRepo.Delete(tx, note)
 	if err != nil {
 		return false, fmt.Errorf("error creating note outbox: %w", err)

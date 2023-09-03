@@ -3,19 +3,13 @@ package http
 import (
 	"net/http"
 	"time"
-
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/logger"
 )
 
 func (s *Server) requestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-
-		l := logger.Get()
-
 		next.ServeHTTP(w, r)
-
-		l.
+		s.logger.
 			Info().
 			Str("method", r.Method).
 			Str("url", r.URL.RequestURI()).

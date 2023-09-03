@@ -18,8 +18,8 @@ type searchNoteRequest struct {
 }
 
 type searcNoteResponse struct {
-	Notes []*domain.Note `json:"notes"`
-	Total int            `json:"total"`
+	Notes []*noteResponse `json:"notes"`
+	Total int             `json:"total"`
 }
 
 func (h *NoteHandlers) SearchNote(r *http.Request) (*adapterHTTP.Response, error) {
@@ -30,12 +30,14 @@ func (h *NoteHandlers) SearchNote(r *http.Request) (*adapterHTTP.Response, error
 	req.ToDate = r.URL.Query().Get("to_date")
 	searchNoteDomain, err := searchCriteriaHTTPToDomain(&req)
 	if err != nil {
+		h.logger.Err(err).Msg("error while converting search criteria")
 		return nil, err
 	}
 
 	user := r.Context().Value(adapterHTTP.UserCtxKey).(*domain.User)
 	notes, err := h.noteServicePort.Search(r.Context(), user, searchNoteDomain)
 	if err != nil {
+		h.logger.Err(err).Msg("error while converting search criteria")
 		return nil, customerrors.ErrInternalServer
 	}
 
@@ -43,9 +45,14 @@ func (h *NoteHandlers) SearchNote(r *http.Request) (*adapterHTTP.Response, error
 		return nil, customerrors.ErrNotFound
 	}
 
-	resp := searcNoteResponse{
-		Notes: notes,
-		Total: len(notes),
+	var noteHTTPresp []*noteResponse
+	for _, note := range notes {
+		noteHTTPresp = append(noteHTTPresp, noteDomainToHTTP(note))
+	}
+
+	resp := &searcNoteResponse{
+		Notes: noteHTTPresp,
+		Total: len(noteHTTPresp),
 	}
 
 	return &adapterHTTP.Response{Data: resp, Status: http.StatusOK}, nil

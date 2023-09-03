@@ -31,7 +31,7 @@ func (r *repositoryImpl) SearchNote(
 	}()
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-	queryBuilder := psql.Select("id", "title", "content", "created_at", "updated_at").From("notes")
+	queryBuilder := psql.Select("id", "user_id", "title", "content", "created_at", "updated_at").From("notes")
 	queryBuilder = queryBuilder.Where(squirrel.Eq{"user_id": user.ID()})
 	if criteria.Title != "" {
 		queryBuilder = queryBuilder.Where("title LIKE ?", fmt.Sprintf("%%%s%%", criteria.Title))
@@ -63,7 +63,7 @@ func (r *repositoryImpl) SearchNote(
 	out := make([]*DBModel, 0)
 	for rows.Next() {
 		var note DBModel
-		if err = rows.Scan(&note.ID, &note.Title, &note.Content, &note.CreatedAt, &note.UpdatedAt); err != nil {
+		if err = rows.Scan(&note.ID, &note.UserID, &note.Title, &note.Content, &note.CreatedAt, &note.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("error search scan note: %w", err)
 		}
 		out = append(out, &note)
@@ -73,7 +73,7 @@ func (r *repositoryImpl) SearchNote(
 		return nil, err
 	}
 
-	err = r.outboxRepo.Search(tx)
+	err = r.outboxRepo.Search(tx, user)
 	if err != nil {
 		return nil, fmt.Errorf("error creating note outbox: %w", err)
 	}

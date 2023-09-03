@@ -47,6 +47,7 @@ func (r *repositoryImpl) ReadNoteByID(ctx context.Context, user *domain.User, id
 
 	var note *domain.Note
 	note, err = noteDBModelToDomain(&model)
+	note.SetUserID(user.ID())
 	if err != nil {
 		return nil, err
 	}

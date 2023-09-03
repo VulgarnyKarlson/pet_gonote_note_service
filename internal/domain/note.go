@@ -23,6 +23,17 @@ func NewNote(noteID, userID, title, content string) (*Note, error) {
 	return note, nil
 }
 
+func (n *Note) Copy() *Note {
+	return &Note{
+		id:        n.id,
+		userID:    n.userID,
+		title:     n.title,
+		content:   n.content,
+		createdAt: n.createdAt,
+		updatedAt: n.updatedAt,
+	}
+}
+
 func (n *Note) ID() string {
 	return n.id
 }

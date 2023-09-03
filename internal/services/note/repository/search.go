@@ -11,8 +11,6 @@ import (
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
-var searchNoteOutbox = &domain.Note{ID: "b40fae8f-7689-a545-d431-14f6374a79cc"}
-
 func (r *repositoryImpl) SearchNote(
 	ctx context.Context,
 	user *domain.User,
@@ -34,7 +32,7 @@ func (r *repositoryImpl) SearchNote(
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	queryBuilder := psql.Select("id", "title", "content", "created_at", "updated_at").From("notes")
-
+	queryBuilder = queryBuilder.Where(squirrel.Eq{"user_id": user.ID()})
 	if criteria.Title != "" {
 		queryBuilder = queryBuilder.Where("title LIKE ?", fmt.Sprintf("%%%s%%", criteria.Title))
 	}
@@ -62,9 +60,9 @@ func (r *repositoryImpl) SearchNote(
 	}
 	defer rows.Close()
 
-	out := make([]*domain.Note, 0)
+	out := make([]*DBModel, 0)
 	for rows.Next() {
-		var note domain.Note
+		var note DBModel
 		if err = rows.Scan(&note.ID, &note.Title, &note.Content, &note.CreatedAt, &note.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("error search scan note: %w", err)
 		}
@@ -75,9 +73,17 @@ func (r *repositoryImpl) SearchNote(
 		return nil, err
 	}
 
-	err = r.outboxRepo.Search(tx, user, searchNoteOutbox)
+	err = r.outboxRepo.Search(tx)
 	if err != nil {
 		return nil, fmt.Errorf("error creating note outbox: %w", err)
+	}
+
+	domainOut := make([]*domain.Note, len(out))
+	for i, note := range out {
+		domainOut[i], err = noteDBModelToDomain(note)
+		if err != nil {
+			return nil, fmt.Errorf("error db -> domain note: %w", err)
+		}
 	}
 
 	err = tx.Commit()
@@ -85,5 +91,5 @@ func (r *repositoryImpl) SearchNote(
 		return nil, fmt.Errorf("error creating note outbox: %w", err)
 	}
 
-	return out, nil
+	return domainOut, nil
 }

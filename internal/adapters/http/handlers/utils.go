@@ -6,17 +6,15 @@ import (
 	"io"
 	"time"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
-func noteHTTPToDomain(n *noteRequest) *domain.Note {
-	return &domain.Note{
-		ID:      n.ID,
-		Title:   n.Title,
-		Content: n.Content,
-	}
+func noteHTTPToDomain(n *noteRequest) (*domain.Note, error) {
+	return domain.NewNote(n.ID, "", n.Title, n.Content)
 }
 
 func searchCriteriaHTTPToDomain(s *searchNoteRequest) (*domain.SearchCriteria, error) {
@@ -46,7 +44,7 @@ func searchCriteriaHTTPToDomain(s *searchNoteRequest) (*domain.SearchCriteria, e
 	}, nil
 }
 
-func readNotes(r io.Reader, st domain.Stream) error {
+func readNotes(r io.Reader, st stream.Stream) error {
 	decoder := json.NewDecoder(r)
 	if delim, err := decoder.Token(); delim != json.Delim('[') || err != nil {
 		return customerrors.ErrInvalidJSONOpenDelimiter
@@ -61,8 +59,11 @@ func readNotes(r io.Reader, st domain.Stream) error {
 			if err := decoder.Decode(&note); err != nil {
 				return customerrors.ErrInvalidJSON
 			}
-
-			st.InWrite(noteHTTPToDomain(&note))
+			domainNote, err := noteHTTPToDomain(&note)
+			if err != nil {
+				return customerrors.ErrInvalidNote
+			}
+			st.InWrite(domainNote)
 		}
 	}
 

@@ -3,6 +3,10 @@ package handlers
 import (
 	"net/http"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
+
+	adapterHTTP "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 
 	"github.com/rs/zerolog/log"
@@ -14,9 +18,9 @@ type сreateNoteResponse struct {
 	TotalNotes int      `json:"total_notes"`
 }
 
-func (h *NoteHandlers) CreateNote(r *http.Request) (*domain.HTTPResponse, error) {
-	user := r.Context().Value(domain.UserCtxKey).(*domain.User)
-	st, ctx := domain.NewStream(r.Context())
+func (h *NoteHandlers) CreateNote(r *http.Request) (*adapterHTTP.Response, error) {
+	user := r.Context().Value(adapterHTTP.UserCtxKey).(*domain.User)
+	st, ctx := stream.NewStream(r.Context())
 	defer st.Destroy()
 	h.noteServicePort.Create(ctx, user, st)
 	go func() {
@@ -46,7 +50,7 @@ func (h *NoteHandlers) CreateNote(r *http.Request) (*domain.HTTPResponse, error)
 				noteCounter++
 				noteIDs = append(noteIDs, noteID)
 			} else {
-				return &domain.HTTPResponse{
+				return &adapterHTTP.Response{
 					Data: &сreateNoteResponse{
 						TotalNotes: noteCounter,
 						NoteIDs:    noteIDs,

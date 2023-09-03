@@ -1,7 +1,9 @@
-package domain
+package stream
 
 import (
 	"context"
+
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
 type Stream interface {
@@ -11,11 +13,11 @@ type Stream interface {
 	Destroy()
 	Drain()
 	Err() error
-	InWrite(note *Note)
-	InProxyWrite(note *Note)
+	InWrite(note *domain.Note)
+	InProxyWrite(note *domain.Note)
 	OutWrite(note string)
-	InRead() <-chan *Note
-	InProxyRead() <-chan *Note
+	InRead() <-chan *domain.Note
+	InProxyRead() <-chan *domain.Note
 	OutRead() <-chan string
 	ErrChan() <-chan error
 	InClose()
@@ -25,8 +27,8 @@ type Stream interface {
 }
 
 type StreamImpl struct {
-	inChan        chan *Note
-	inProxy       chan *Note
+	inChan        chan *domain.Note
+	inProxy       chan *domain.Note
 	outChan       chan string
 	errChan       chan error
 	err           error
@@ -38,8 +40,8 @@ type StreamImpl struct {
 func NewStream(originalCtx context.Context) (*StreamImpl, context.Context) {
 	ctx, cancel := context.WithCancel(originalCtx)
 	s := &StreamImpl{
-		inChan:        make(chan *Note),
-		inProxy:       make(chan *Note),
+		inChan:        make(chan *domain.Note),
+		inProxy:       make(chan *domain.Note),
 		outChan:       make(chan string),
 		errChan:       make(chan error),
 		ctx:           ctx,
@@ -119,69 +121,4 @@ func (s *StreamImpl) Err() error {
 		err = s.ctx.Err()
 	}
 	return err
-}
-
-func (s *StreamImpl) InWrite(note *Note) {
-	if s.isClosed {
-		return
-	}
-	s.inChan <- note
-}
-
-func (s *StreamImpl) InProxyWrite(note *Note) {
-	if s.isClosed {
-		return
-	}
-	s.inProxy <- note
-}
-
-func (s *StreamImpl) OutWrite(note string) {
-	if s.isClosed {
-		return
-	}
-	s.outChan <- note
-}
-
-func (s *StreamImpl) InRead() <-chan *Note {
-	return s.inChan
-}
-
-func (s *StreamImpl) InProxyRead() <-chan *Note {
-	return s.inProxy
-}
-
-func (s *StreamImpl) OutRead() <-chan string {
-	return s.outChan
-}
-
-func (s *StreamImpl) ErrChan() <-chan error {
-	return s.errChan
-}
-
-func (s *StreamImpl) InClose() {
-	if s.isClosed {
-		return
-	}
-	close(s.inChan)
-}
-
-func (s *StreamImpl) InProxyClose() {
-	if s.isClosed {
-		return
-	}
-	close(s.inProxy)
-}
-
-func (s *StreamImpl) OutClose() {
-	if s.isClosed {
-		return
-	}
-	close(s.outChan)
-}
-
-func (s *StreamImpl) ErrClose() {
-	if s.isClosed {
-		return
-	}
-	close(s.errChan)
 }

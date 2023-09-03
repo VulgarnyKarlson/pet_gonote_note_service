@@ -8,6 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
+
 	domain "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -36,7 +38,7 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // CreateNote mocks base method.
-func (m *MockRepository) CreateNote(ctx context.Context, user *domain.User, st domain.Stream) {
+func (m *MockRepository) CreateNote(ctx context.Context, user *domain.User, st stream.Stream) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "CreateNote", ctx, user, st)
 }

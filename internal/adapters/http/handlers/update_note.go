@@ -3,6 +3,10 @@ package handlers
 import (
 	"net/http"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
+
+	adapterHTTP "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
+
 	"github.com/rs/zerolog/log"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
@@ -12,9 +16,9 @@ type updateNoteResponse struct {
 	TotalNotes int `json:"total_notes"`
 }
 
-func (h *NoteHandlers) UpdateNote(r *http.Request) (*domain.HTTPResponse, error) {
-	user := r.Context().Value(domain.UserCtxKey).(*domain.User)
-	st, ctx := domain.NewStream(r.Context())
+func (h *NoteHandlers) UpdateNote(r *http.Request) (*adapterHTTP.Response, error) {
+	user := r.Context().Value(adapterHTTP.UserCtxKey).(*domain.User)
+	st, ctx := stream.NewStream(r.Context())
 	defer st.Destroy()
 	go func() {
 		err := readNotes(r.Body, st)
@@ -41,7 +45,7 @@ func (h *NoteHandlers) UpdateNote(r *http.Request) (*domain.HTTPResponse, error)
 			}
 		case note, ok := <-st.InRead():
 			if !ok {
-				return &domain.HTTPResponse{Data: &updateNoteResponse{TotalNotes: updatesCounter}, Status: http.StatusOK}, nil
+				return &adapterHTTP.Response{Data: &updateNoteResponse{TotalNotes: updatesCounter}, Status: http.StatusOK}, nil
 			}
 			updatesCounter++
 			err := h.noteServicePort.Update(ctx, user, note)

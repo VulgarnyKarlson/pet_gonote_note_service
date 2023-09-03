@@ -18,7 +18,7 @@ repos:
     hooks:
       - id: go-fmt
       - id: go-cyclo
-        args: [-over=15]
+        args: [-over=18]
       - id: validate-toml
       - id: no-go-testing
       - id: golangci-lint

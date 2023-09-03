@@ -1,17 +1,74 @@
 package domain
 
 import (
-	"context"
 	"time"
 )
 
 type Note struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"user_id"`
-	Title     string    `json:"title"`
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	id        string
+	userID    string
+	title     string
+	content   string
+	createdAt time.Time
+	updatedAt time.Time
+}
+
+func NewNote(noteID, userID, title, content string) (*Note, error) {
+	note := &Note{
+		id:      noteID,
+		userID:  userID,
+		title:   title,
+		content: content,
+	}
+	return note, nil
+}
+
+func (n *Note) ID() string {
+	return n.id
+}
+
+func (n *Note) SetID(id string) {
+	n.id = id
+}
+
+func (n *Note) UserID() string {
+	return n.userID
+}
+
+func (n *Note) SetUserID(userID string) {
+	n.userID = userID
+}
+
+func (n *Note) Title() string {
+	return n.title
+}
+
+func (n *Note) SetTitle(title string) {
+	n.title = title
+}
+
+func (n *Note) Content() string {
+	return n.content
+}
+
+func (n *Note) SetContent(content string) {
+	n.content = content
+}
+
+func (n *Note) CreatedAt() time.Time {
+	return n.createdAt
+}
+
+func (n *Note) SetCreatedAt(createdAt time.Time) {
+	n.createdAt = createdAt
+}
+
+func (n *Note) UpdatedAt() time.Time {
+	return n.updatedAt
+}
+
+func (n *Note) SetUpdatedAt(updatedAt time.Time) {
+	n.updatedAt = updatedAt
 }
 
 type SearchCriteria struct {
@@ -24,12 +81,4 @@ type SearchCriteria struct {
 type CreateNoteResult struct {
 	ID  string
 	Err error
-}
-
-type NoteService interface {
-	Create(ctx context.Context, user *User, st Stream)
-	ReadByID(ctx context.Context, user *User, id string) (*Note, error)
-	Update(ctx context.Context, user *User, note *Note) error
-	Delete(ctx context.Context, user *User, id string) (bool, error)
-	Search(ctx context.Context, user *User, criteria *SearchCriteria) ([]*Note, error)
 }

@@ -30,12 +30,11 @@ func (r *repositoryImpl) UpdateNote(ctx context.Context, user *domain.User, note
 	}()
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-	note.UpdatedAt = time.Now()
 	query, args, _ := psql.Update("notes").
-		Set("title", note.Title).
-		Set("content", note.Content).
-		Set("updated_at", note.UpdatedAt.Format(time.RFC3339)).
-		Where(squirrel.Eq{"id": note.ID, "user_id": user.ID}).
+		Set("title", note.Title()).
+		Set("content", note.Content()).
+		Set("updated_at", note.UpdatedAt().Format(time.RFC3339)).
+		Where(squirrel.Eq{"id": note.ID(), "user_id": user.ID()}).
 		Suffix("RETURNING id").
 		ToSql()
 
@@ -55,7 +54,7 @@ func (r *repositoryImpl) UpdateNote(ctx context.Context, user *domain.User, note
 		return customerrors.ErrNotFoundNoteID
 	}
 
-	err = r.outboxRepo.Update(tx, user, note)
+	err = r.outboxRepo.Update(tx, note)
 	if err != nil {
 		return fmt.Errorf("error creating note outbox: %w", err)
 	}

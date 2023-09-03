@@ -29,7 +29,7 @@ func (r *repositoryImpl) DeleteNote(ctx context.Context, user *domain.User, id s
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 	query, args, err := psql.Delete("notes").
-		Where(squirrel.Eq{"id": id, "user_id": user.ID}).
+		Where(squirrel.Eq{"id": id, "user_id": user.ID()}).
 		ToSql()
 
 	if err != nil {
@@ -45,7 +45,9 @@ func (r *repositoryImpl) DeleteNote(ctx context.Context, user *domain.User, id s
 		return false, nil
 	}
 
-	err = r.outboxRepo.Delete(tx, user, &domain.Note{ID: id})
+	var note *domain.Note
+	note.SetID(id)
+	err = r.outboxRepo.Delete(tx, note)
 	if err != nil {
 		return false, fmt.Errorf("error creating note outbox: %w", err)
 	}

@@ -4,8 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
-
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 )
 
@@ -23,7 +21,7 @@ func (s *Server) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), domain.UserCtxKey, resp.User)
+		ctx := context.WithValue(r.Context(), UserCtxKey, resp.User)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }

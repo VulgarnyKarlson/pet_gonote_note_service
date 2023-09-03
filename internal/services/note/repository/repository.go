@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/noteoutbox"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/postgres"
@@ -13,7 +15,7 @@ type Repository interface {
 	CreateNote(
 		ctx context.Context,
 		user *domain.User,
-		st domain.Stream,
+		st stream.Stream,
 	)
 	ReadNoteByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error)
 	UpdateNote(ctx context.Context, user *domain.User, note *domain.Note) error

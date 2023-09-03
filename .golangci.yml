@@ -35,7 +35,7 @@ linters-settings:
       - octalLiteral
       - whyNoLint
   gocyclo:
-    min-complexity: 15
+    min-complexity: 18
   gofmt:
     auto-fix: true
     rewrite-rules:

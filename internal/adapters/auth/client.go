@@ -44,10 +44,7 @@ func (c *ClientImpl) ValidateToken(ctx context.Context, token string) (*Validate
 	}
 	validateTokenResponse := &ValidateTokenResponse{Valid: resp.Valid}
 	if resp.Valid {
-		validateTokenResponse.User = &domain.User{
-			ID:       resp.User.Id,
-			UserName: resp.User.Username,
-		}
+		validateTokenResponse.User = domain.NewUser(resp.User.GetId(), resp.User.GetUsername())
 	}
 	return validateTokenResponse, nil
 }

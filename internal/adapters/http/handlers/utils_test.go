@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
+
 	"go.uber.org/goleak"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
@@ -54,7 +56,7 @@ func TestReadNotes(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockStream := domain.NewMockStream(ctrl)
+			mockStream := stream.NewMockStream(ctrl)
 			reader := bytes.NewBufferString(tc.inputjson)
 			mockStream.EXPECT().Done().AnyTimes()
 			mockStream.EXPECT().InWrite(gomock.Any()).Times(tc.writeCount)

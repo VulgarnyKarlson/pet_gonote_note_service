@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/hashicorp/go-uuid"
 	"github.com/jackc/pgx/v4"
@@ -19,7 +21,7 @@ import (
 func (r *repositoryImpl) CreateNote(
 	ctx context.Context,
 	user *domain.User,
-	st domain.Stream,
+	st stream.Stream,
 ) {
 	tx, err := r.db.NewTransaction(ctx, pgx.TxOptions{})
 	if err != nil {
@@ -86,18 +88,24 @@ loop:
 	st.Close()
 }
 
-func (r *repositoryImpl) insertBatch(tx *postgres.Transaction, batch []*domain.Note, user *domain.User, st domain.Stream) error {
+func (r *repositoryImpl) insertBatch(tx *postgres.Transaction, notes []*domain.Note, user *domain.User, st stream.Stream) error {
 	noteBatch := &pgx.Batch{}
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-	for _, note := range batch {
+	mBatch := make([]*DBModel, 0, len(notes))
+	for _, note := range notes {
 		noteID, err := uuid.GenerateUUID()
 		if err != nil {
 			return fmt.Errorf("error generating uuid: %w", err)
 		}
-		note.ID = noteID
+		note.SetID(noteID)
+		domainNote := noteDomainToDBModel(note)
+		mBatch = append(mBatch, domainNote)
+	}
+
+	for _, note := range mBatch {
 		query, args, _ := psql.Insert("notes").
 			Columns("id", "user_id", "title", "content", "created_at", "updated_at").
-			Values(note.ID, user.ID, note.Title, note.Content, note.CreatedAt.Format(time.RFC3339), note.UpdatedAt.Format(time.RFC3339)).
+			Values(note.ID, user.ID(), note.Title, note.Content, note.CreatedAt.Format(time.RFC3339), note.UpdatedAt.Format(time.RFC3339)).
 			ToSql()
 
 		noteBatch.Queue(query, args...)
@@ -114,12 +122,12 @@ func (r *repositoryImpl) insertBatch(tx *postgres.Transaction, batch []*domain.N
 		return fmt.Errorf("error closing batch: %w", err)
 	}
 
-	for _, note := range batch {
-		err = r.outboxRepo.Create(tx, user, note)
+	for _, note := range notes {
+		err = r.outboxRepo.Create(tx, note)
 		if err != nil {
 			return fmt.Errorf("error creating note outbox: %w", err)
 		}
-		st.OutWrite(note.ID)
+		st.OutWrite(note.ID())
 	}
 
 	return nil

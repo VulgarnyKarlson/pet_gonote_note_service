@@ -6,10 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
-
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http/handlers"
-
 	"github.com/gorilla/mux"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/auth"
 
@@ -22,17 +18,15 @@ type Server struct {
 	cfg         *Config
 	auth        auth.Client
 	router      *mux.Router
-	handlers    *handlers.NoteHandlers
 	httpAdapter http.Server
 }
 
-func NewServer(cfg *Config, authClient auth.Client, noteHandlers *handlers.NoteHandlers) *Server {
+func NewServer(cfg *Config, authClient auth.Client) *Server {
 	router := mux.NewRouter()
 	s := &Server{
-		cfg:      cfg,
-		auth:     authClient,
-		router:   router,
-		handlers: noteHandlers,
+		cfg:    cfg,
+		auth:   authClient,
+		router: router,
 		httpAdapter: http.Server{
 			ReadTimeout: time.Duration(cfg.ReadTimeout) * time.Second,
 			Addr:        cfg.Addr,
@@ -57,7 +51,7 @@ func (s *Server) Stop() {
 	}
 }
 
-func (s *Server) handlerErrors(h func(*http.Request) (*domain.HTTPResponse, error)) http.HandlerFunc {
+func (s *Server) handlerErrors(h func(*http.Request) (*Response, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response, err := h(r)
 		if err != nil {
@@ -67,7 +61,7 @@ func (s *Server) handlerErrors(h func(*http.Request) (*domain.HTTPResponse, erro
 				customErr = customerrors.ErrInternalServer
 			}
 			w.WriteHeader(customErr.Code)
-			response = &domain.HTTPResponse{Error: customErr.Message}
+			response = &Response{Error: customErr.Message}
 		} else {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(response.Status)

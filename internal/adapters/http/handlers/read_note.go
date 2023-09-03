@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	adapterHTTP "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
@@ -13,9 +15,9 @@ type readNoteResponse struct {
 	Content string `json:"content"`
 }
 
-func (h *NoteHandlers) ReadNoteByID(r *http.Request) (*domain.HTTPResponse, error) {
+func (h *NoteHandlers) ReadNoteByID(r *http.Request) (*adapterHTTP.Response, error) {
 	noteID := r.URL.Query().Get("note_id")
-	user := r.Context().Value(domain.UserCtxKey).(*domain.User)
+	user := r.Context().Value(adapterHTTP.UserCtxKey).(*domain.User)
 	note, err := h.noteServicePort.ReadByID(r.Context(), user, noteID)
 	if err != nil {
 		return nil, err
@@ -26,9 +28,9 @@ func (h *NoteHandlers) ReadNoteByID(r *http.Request) (*domain.HTTPResponse, erro
 	}
 
 	resp := readNoteResponse{
-		Title:   note.Title,
-		Content: note.Content,
+		Title:   note.Title(),
+		Content: note.Content(),
 	}
 
-	return &domain.HTTPResponse{Data: resp, Status: http.StatusOK}, nil
+	return &adapterHTTP.Response{Data: resp, Status: http.StatusOK}, nil
 }

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
+
 	"go.uber.org/goleak"
 
 	"github.com/stretchr/testify/assert"
@@ -23,10 +25,27 @@ func TestNoteService_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	var mockRepo *repository.MockRepository
-	var st *domain.MockStream
+	var st *stream.MockStream
 	cfg := &Config{
 		MaxTitleLength:   7,
 		MaxContentLength: 11,
+	}
+
+	successNote1, err := domain.NewNote("1", "user1", "Note 1", "Content 1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	successNote2, err := domain.NewNote("2", "user2", "Note 2", "Content 2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	titleLongNote, err := domain.NewNote("3", "user3", "Note 1111", "Content 3")
+	if err != nil {
+		t.Fatal(err)
+	}
+	contentLongNote, err := domain.NewNote("4", "user4", "Note 4", "Content 2222222222 2")
+	if err != nil {
+		t.Fatal(err)
 	}
 	testCases := []struct {
 		name            string
@@ -37,8 +56,8 @@ func TestNoteService_Create(t *testing.T) {
 		{
 			name: "valid",
 			notes: []*domain.Note{
-				{ID: "1", UserID: "user1", Title: "Note 1", Content: "Content 1"},
-				{ID: "2", UserID: "user2", Title: "Note 2", Content: "Content 2"},
+				successNote1,
+				successNote2,
 			},
 			expectedErr:     nil,
 			proxyWriteCount: 2,
@@ -46,8 +65,8 @@ func TestNoteService_Create(t *testing.T) {
 		{
 			name: "title too long",
 			notes: []*domain.Note{
-				{ID: "2", UserID: "user2", Title: "Note 1", Content: "Content 2"},
-				{ID: "1", UserID: "user1", Title: "Note 1111", Content: "Content 1"},
+				successNote2,
+				titleLongNote,
 			},
 			expectedErr:     customerrors.ErrTitleTooLong,
 			proxyWriteCount: 1,
@@ -55,8 +74,8 @@ func TestNoteService_Create(t *testing.T) {
 		{
 			name: "content too long",
 			notes: []*domain.Note{
-				{ID: "1", UserID: "user1", Title: "Note 1", Content: "Content 1"},
-				{ID: "2", UserID: "user2", Title: "Note 2", Content: "Content 2222222222 2"},
+				successNote1,
+				contentLongNote,
 			},
 			expectedErr:     customerrors.ErrContentTooLong,
 			proxyWriteCount: 1,
@@ -64,7 +83,7 @@ func TestNoteService_Create(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			st = domain.NewMockStream(ctrl)
+			st = stream.NewMockStream(ctrl)
 			mockRepo = repository.NewMockRepository(ctrl)
 			mockRepo.EXPECT().CreateNote(
 				gomock.Any(),
@@ -93,7 +112,7 @@ func TestNoteService_Create(t *testing.T) {
 			}()
 
 			s := NewService(cfg, mockRepo)
-			go s.Create(context.TODO(), &domain.User{ID: "1"}, st)
+			go s.Create(context.TODO(), domain.NewUser("1", ""), st)
 
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 			defer cancel()
@@ -145,7 +164,7 @@ func TestNoteService_ReadByID(t *testing.T) {
 			}
 
 			s := NewService(cfg, mockRepo)
-			_, err := s.ReadByID(context.Background(), &domain.User{ID: "1"}, tc.id)
+			_, err := s.ReadByID(context.Background(), domain.NewUser("1", ""), tc.id)
 			assert.Equal(t, tc.expectedErr, err)
 		})
 	}
@@ -161,6 +180,14 @@ func TestNoteService_Update(t *testing.T) {
 		MaxTitleLength:   7,
 		MaxContentLength: 11,
 	}
+	successNote, err := domain.NewNote("1", "user1", "Note 1", "Content 1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	invalidNote, err := domain.NewNote("", "user1", "Note 1", "Content 1")
+	if err != nil {
+		t.Fatal(err)
+	}
 	testCases := []struct {
 		name        string
 		note        *domain.Note
@@ -168,12 +195,12 @@ func TestNoteService_Update(t *testing.T) {
 	}{
 		{
 			name:        "valid",
-			note:        &domain.Note{ID: "1", UserID: "user1", Title: "Note 1", Content: "Content 1"},
+			note:        successNote,
 			expectedErr: nil,
 		},
 		{
 			name:        "invalid id",
-			note:        &domain.Note{ID: "", UserID: "user1", Title: "Note 1", Content: "Content 1"},
+			note:        invalidNote,
 			expectedErr: customerrors.ErrInvalidNoteID,
 		},
 	}
@@ -189,7 +216,7 @@ func TestNoteService_Update(t *testing.T) {
 			}
 
 			s := NewService(cfg, mockRepo)
-			err := s.Update(context.Background(), &domain.User{ID: "1"}, tc.note)
+			err := s.Update(context.Background(), domain.NewUser("1", ""), tc.note)
 			assert.Equal(t, tc.expectedErr, err)
 		})
 	}
@@ -233,7 +260,7 @@ func TestNoteService_Delete(t *testing.T) {
 			}
 
 			s := NewService(cfg, mockRepo)
-			_, err := s.Delete(context.Background(), &domain.User{ID: "1"}, tc.id)
+			_, err := s.Delete(context.Background(), domain.NewUser("1", ""), tc.id)
 			assert.Equal(t, tc.expectedErr, err)
 		})
 	}
@@ -272,7 +299,7 @@ func TestNoteService_Search(t *testing.T) {
 			}
 
 			s := NewService(cfg, mockRepo)
-			_, err := s.Search(context.Background(), &domain.User{ID: "1"}, tc.criteria)
+			_, err := s.Search(context.Background(), domain.NewUser("1", ""), tc.criteria)
 			assert.Equal(t, tc.expectedErr, err)
 		})
 	}

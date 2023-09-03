@@ -3,6 +3,10 @@ package customerrors
 import "net/http"
 
 var (
+	ErrInvalidNote = &HTTPError{
+		Code:    http.StatusBadRequest,
+		Message: "invalid-note",
+	}
 	ErrInvalidNoteID = &HTTPError{
 		Code:    http.StatusBadRequest,
 		Message: "invalid-note-id",

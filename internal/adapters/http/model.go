@@ -1,6 +1,6 @@
-package domain
+package http
 
-type HTTPResponse struct {
+type Response struct {
 	Data   any    `json:"data,omitempty"`
 	Status int    `json:"status,omitempty"`
 	Error  string `json:"error,omitempty"`

@@ -29,15 +29,15 @@ func (r *repositoryImpl) ReadNoteByID(ctx context.Context, user *domain.User, id
 
 	query, args, err := psql.Select("id", "title", "content", "created_at", "updated_at").
 		From("notes").
-		Where(squirrel.Eq{"id": id, "user_id": user.ID}).
+		Where(squirrel.Eq{"id": id, "user_id": user.ID()}).
 		ToSql()
 
 	if err != nil {
 		return nil, err
 	}
 
-	var note domain.Note
-	err = tx.QueryRow(query, args...).Scan(&note.ID, &note.Title, &note.Content, &note.CreatedAt, &note.UpdatedAt)
+	var model DBModel
+	err = tx.QueryRow(query, args...).Scan(&model.ID, &model.Title, &model.Content, &model.CreatedAt, &model.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -45,7 +45,13 @@ func (r *repositoryImpl) ReadNoteByID(ctx context.Context, user *domain.User, id
 		return nil, err
 	}
 
-	err = r.outboxRepo.FindByID(tx, user, &note)
+	var note *domain.Note
+	note, err = noteDBModelToDomain(&model)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.outboxRepo.FindByID(tx, note)
 	if err != nil {
 		return nil, fmt.Errorf("error creating note outbox: %w", err)
 	}
@@ -55,5 +61,5 @@ func (r *repositoryImpl) ReadNoteByID(ctx context.Context, user *domain.User, id
 		return nil, fmt.Errorf("error creating note outbox: %w", err)
 	}
 
-	return &note, nil
+	return note, nil
 }

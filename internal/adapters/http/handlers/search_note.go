@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	adapterHTTP "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
@@ -20,7 +22,7 @@ type searcNoteResponse struct {
 	Total int            `json:"total"`
 }
 
-func (h *NoteHandlers) SearchNote(r *http.Request) (*domain.HTTPResponse, error) {
+func (h *NoteHandlers) SearchNote(r *http.Request) (*adapterHTTP.Response, error) {
 	var req searchNoteRequest
 	req.Title = r.URL.Query().Get("title")
 	req.Content = r.URL.Query().Get("content")
@@ -31,7 +33,7 @@ func (h *NoteHandlers) SearchNote(r *http.Request) (*domain.HTTPResponse, error)
 		return nil, err
 	}
 
-	user := r.Context().Value(domain.UserCtxKey).(*domain.User)
+	user := r.Context().Value(adapterHTTP.UserCtxKey).(*domain.User)
 	notes, err := h.noteServicePort.Search(r.Context(), user, searchNoteDomain)
 	if err != nil {
 		return nil, customerrors.ErrInternalServer
@@ -46,5 +48,5 @@ func (h *NoteHandlers) SearchNote(r *http.Request) (*domain.HTTPResponse, error)
 		Total: len(notes),
 	}
 
-	return &domain.HTTPResponse{Data: resp, Status: http.StatusOK}, nil
+	return &adapterHTTP.Response{Data: resp, Status: http.StatusOK}, nil
 }

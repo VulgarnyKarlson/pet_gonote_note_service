@@ -129,6 +129,18 @@ else
 	@echo "You forgot to add test name, example:\nmake test name=unit  (unit, integration, e2e, all)"
 endif
 
+.PHONY: update-github-repo
+update-github-repo: ## update-github-repo - update github repo
+	mkdir tmp && \
+	cd tmp && \
+	git clone git@github.com:VulgarnyKarlson/pet_gonote_note_service.git && \
+	cd pet_gonote_note_service && \
+	git remote set-url origin git@gitlab.karlson.dev:individual/pet_gonote/note_service.git && \
+	git pull origin master && \
+	git remote set-url origin git@github.com:VulgarnyKarlson/pet_gonote_note_service.git && \
+	git push origin master && \
+	cd ../.. && \
+	rm -rf tmp
 
 .PHONY: help
 help:

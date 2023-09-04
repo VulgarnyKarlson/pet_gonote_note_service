@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/circuitbreaker"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
+
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 
@@ -25,16 +28,18 @@ type ValidateTokenResponse struct {
 }
 
 type ClientImpl struct {
-	conn    *grpc.ClientConn
-	service proto.AuthServiceClient
-	logger  *zerolog.Logger
-	config  *Config
+	conn           *grpc.ClientConn
+	service        proto.AuthServiceClient
+	logger         *zerolog.Logger
+	config         *Config
+	circuitbreaker circuitbreaker.CircuitBreaker
 }
 
-func NewWrapper(logger *zerolog.Logger, cnf *Config) (Client, error) {
+func NewWrapper(logger *zerolog.Logger, cnf *Config, cb circuitbreaker.CircuitBreaker) (Client, error) {
 	return &ClientImpl{
-		config: cnf,
-		logger: logger,
+		config:         cnf,
+		logger:         logger,
+		circuitbreaker: cb,
 	}, nil
 }
 
@@ -54,10 +59,16 @@ func (c *ClientImpl) Connect() error {
 }
 
 func (c *ClientImpl) ValidateToken(ctx context.Context, token string) (*ValidateTokenResponse, error) {
-	resp, err := c.service.ValidateToken(ctx, &proto.ValidateTokenRequest{Token: token})
+	err := c.circuitbreaker.Attempt()
 	if err != nil {
 		return nil, err
 	}
+	resp, err := c.service.ValidateToken(ctx, &proto.ValidateTokenRequest{Token: token})
+	if err != nil {
+		c.circuitbreaker.Fail(err)
+		return nil, customerrors.ErrAuthServiceError
+	}
+	c.circuitbreaker.Success()
 	validateTokenResponse := &ValidateTokenResponse{Valid: resp.Valid}
 	if resp.Valid {
 		validateTokenResponse.User = domain.NewUser(resp.User.GetId(), resp.User.GetUsername())

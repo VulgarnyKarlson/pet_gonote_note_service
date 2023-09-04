@@ -1,4 +1,6 @@
 # TODO
+
+Circuit Breaker for Auth Service
 ## CICD
 Unit Test
 - services/note/repisotory/create.go ( Stream test )

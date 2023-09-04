@@ -16,7 +16,7 @@ func (s *Server) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 		token = token[7:]
 		resp, err := s.auth.ValidateToken(r.Context(), token)
-		if !resp.Valid || err != nil {
+		if err != nil || resp == nil || !resp.Valid {
 			http.Error(w, customerrors.ErrUnauthorized.Message, customerrors.ErrUnauthorized.Code)
 			return
 		}

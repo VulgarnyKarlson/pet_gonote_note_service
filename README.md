@@ -17,6 +17,7 @@
 - [x] Dependency Injection ( uber/fx )
 - [x] Transactional outbox (Stats Sender is releasing stats messages from outbox table)
 - [x] Stream processing ( create_note stream read, check and write to db by batch insert )
+- [x] Circuit breaker ( on auth service )
 - [x] Unit tests ( testify/assert/mockgen ) ( in progress integration and e2e tests )
 - [x] DDD
 - [x] CQRS

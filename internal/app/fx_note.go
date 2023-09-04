@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/circuitbreaker"
+
 	"github.com/rs/zerolog/log"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/auth"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
@@ -19,6 +21,7 @@ import (
 func NewNoteApp() *fx.App {
 	return fx.New(
 		fx.Options(
+			circuitbreaker.NewModule(),
 			auth.NewModule(),
 			postgres.NewModule(),
 			noteoutbox.NewModule(),

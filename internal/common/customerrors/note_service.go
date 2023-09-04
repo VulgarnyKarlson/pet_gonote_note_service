@@ -27,4 +27,8 @@ var (
 		Code:    http.StatusInternalServerError,
 		Message: "repository-error",
 	}
+	ErrAuthServiceError = &HTTPError{
+		Code:    http.StatusInternalServerError,
+		Message: "auth-service-error",
+	}
 )

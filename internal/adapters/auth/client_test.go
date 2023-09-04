@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/circuitbreaker"
+
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -54,7 +56,13 @@ func TestValidateToken(t *testing.T) {
 	mockAuthService := proto.NewMockAuthServiceClient(ctrl)
 
 	config := &Config{Address: "localhost:5000"}
-	wrapper, err := NewWrapper(&log.Logger, config)
+	cb := circuitbreaker.NewCircuitBreaker(&circuitbreaker.Config{
+		RecordLength:     100,
+		Timeout:          5000,
+		Percentile:       0.3,
+		RecoveryRequests: 10,
+	}, &log.Logger)
+	wrapper, err := NewWrapper(&log.Logger, config, cb)
 	if err != nil {
 		t.Fatal(err)
 	}

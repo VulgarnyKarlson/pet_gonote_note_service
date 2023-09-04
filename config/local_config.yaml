@@ -27,3 +27,8 @@ Adapters:
 Common:
   Logger:
     Level: info
+  CircuitBreaker:
+    RecordLength: 100
+    Timeout: 5000
+    Percentile: 0.05
+    RecoveryRequests: 10

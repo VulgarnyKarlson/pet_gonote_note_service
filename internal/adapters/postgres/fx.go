@@ -10,7 +10,7 @@ import (
 
 func NewModule() fx.Option {
 	return fx.Module(
-		"auth/postgres",
+		"adapter/postgres",
 		fx.Provide(
 			NewConfig,
 			New,

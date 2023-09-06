@@ -7,6 +7,7 @@ Services:
 Adapters:
   Auth:
     Address: "localhost:5000"
+    BackupStorageTime: 60
   HTTP:
     Addr: :3001
     ReadTimeout: 5
@@ -24,6 +25,10 @@ Adapters:
     DBName: note_service
     SSLMode: disable
     PoolSize: 100
+  Redis:
+    Host: localhost
+    Port: 6379
+    DB: 0
 Common:
   Logger:
     Level: info

@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/redis"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/circuitbreaker"
 
 	"github.com/rs/zerolog/log"
@@ -22,6 +24,7 @@ func NewNoteApp() *fx.App {
 	return fx.New(
 		fx.Options(
 			circuitbreaker.NewModule(),
+			redis.NewModule(),
 			auth.NewModule(),
 			postgres.NewModule(),
 			noteoutbox.NewModule(),

@@ -3,6 +3,7 @@
 ### Description:
 
 ### Project Workflow:
+- Each user request is authenticated by the Auth service (JWT) with a circuit breaker and storage backup token.
 - CRUD operations for notes:
     - Creating notes.
     - Viewing notes.

@@ -4,6 +4,7 @@ Circuit Breaker for Auth Service
 ## CICD
 Unit Test
 - services/note/repisotory/create.go ( Stream test )
+- adapters/auth/store.go
 ## Integration Test
 - services/note/repository/*CRUD
 - services/noteoutbox

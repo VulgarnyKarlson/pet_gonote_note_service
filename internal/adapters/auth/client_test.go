@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/redis"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/circuitbreaker"
 
 	"github.com/rs/zerolog/log"
@@ -54,6 +56,7 @@ func TestValidateToken(t *testing.T) {
 		},
 	}
 	mockAuthService := proto.NewMockAuthServiceClient(ctrl)
+	mockRedis := redis.NewMockClient(ctrl)
 
 	config := &Config{Address: "localhost:5000"}
 	cb := circuitbreaker.NewCircuitBreaker(&circuitbreaker.Config{
@@ -62,7 +65,7 @@ func TestValidateToken(t *testing.T) {
 		Percentile:       0.3,
 		RecoveryRequests: 10,
 	}, &log.Logger)
-	wrapper, err := NewWrapper(&log.Logger, config, cb)
+	wrapper, err := NewWrapper(&log.Logger, config, cb, mockRedis)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +77,8 @@ func TestValidateToken(t *testing.T) {
 				gomock.Any(),
 				&proto.ValidateTokenRequest{Token: tt.token},
 			).Return(tt.mockResp, tt.mockErr)
-
+			mockRedis.EXPECT().Get(gomock.Any(), tt.token).Return("", nil)
+			mockRedis.EXPECT().Set(gomock.Any(), tt.token, gomock.Any(), gomock.Any()).Return(nil)
 			result, err := wrapper.ValidateToken(context.Background(), tt.token)
 
 			assert.Equal(t, tt.expectedResult, result)

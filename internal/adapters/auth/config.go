@@ -2,12 +2,14 @@ package auth
 
 import (
 	"fmt"
+	"time"
 
 	"go.uber.org/config"
 )
 
 type Config struct {
-	Address string `yaml:"Address"`
+	Address           string        `yaml:"Address"`
+	BackupStorageTime time.Duration `yaml:"BackupStorageTime"`
 }
 
 func NewAuthConfig(provider config.Provider) (*Config, error) {
@@ -16,5 +18,6 @@ func NewAuthConfig(provider config.Provider) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to auth get config: %w", err)
 	}
+	cfg.BackupStorageTime *= time.Second
 	return &cfg, nil
 }

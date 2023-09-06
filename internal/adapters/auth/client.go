@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/redis"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/circuitbreaker"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 
@@ -33,13 +34,15 @@ type ClientImpl struct {
 	logger         *zerolog.Logger
 	config         *Config
 	circuitbreaker circuitbreaker.CircuitBreaker
+	storage        redis.Client
 }
 
-func NewWrapper(logger *zerolog.Logger, cnf *Config, cb circuitbreaker.CircuitBreaker) (Client, error) {
+func NewWrapper(logger *zerolog.Logger, cnf *Config, cb circuitbreaker.CircuitBreaker, storage redis.Client) (Client, error) {
 	return &ClientImpl{
 		config:         cnf,
 		logger:         logger,
 		circuitbreaker: cb,
+		storage:        storage,
 	}, nil
 }
 
@@ -59,6 +62,9 @@ func (c *ClientImpl) Connect() error {
 }
 
 func (c *ClientImpl) ValidateToken(ctx context.Context, token string) (*ValidateTokenResponse, error) {
+	if res, err := c.get(ctx, token); err == nil {
+		return res, nil
+	}
 	err := c.circuitbreaker.Attempt()
 	if err != nil {
 		return nil, err
@@ -72,6 +78,11 @@ func (c *ClientImpl) ValidateToken(ctx context.Context, token string) (*Validate
 	validateTokenResponse := &ValidateTokenResponse{Valid: resp.Valid}
 	if resp.Valid {
 		validateTokenResponse.User = domain.NewUser(resp.User.GetId(), resp.User.GetUsername())
+	}
+	err = c.store(ctx, token, validateTokenResponse)
+	if err != nil {
+		c.logger.Err(err).Msg("failed to store token")
+		return nil, customerrors.ErrAuthServiceError
 	}
 	return validateTokenResponse, nil
 }

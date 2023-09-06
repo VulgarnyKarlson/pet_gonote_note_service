@@ -30,7 +30,7 @@ up: ## up - docker-compose --file docker-compose.yml up
 
 .PHONY: up-services
 up-services: ## up-services - docker-compose --file docker-compose.yml up --build -d rabbitmq postgres
-	docker-compose --file docker-compose.yml up --build -d rabbitmq postgres
+	docker-compose --file docker-compose.yml up --build -d rabbitmq postgres redis
 
 .PHONY: down
 down: ## down - docker-compose --file docker-compose.yml down -v

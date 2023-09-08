@@ -4,10 +4,8 @@ import (
 	"net/http"
 
 	adapterHTTP "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
-
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
-
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
 type searchNoteRequest struct {

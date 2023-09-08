@@ -3,21 +3,20 @@ package app
 import (
 	"context"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/redis"
-
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/circuitbreaker"
-
 	"github.com/rs/zerolog/log"
+	"go.uber.org/fx"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/auth"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http/handlers"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/postgres"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/redis"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/circuitbreaker"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/logger"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/config"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/note"
 	noteRepo "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/note/repository"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/noteoutbox"
-	"go.uber.org/fx"
 )
 
 func NewNoteApp() *fx.App {

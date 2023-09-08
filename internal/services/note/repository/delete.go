@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jackc/pgx/v4"
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
-
 	"github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v4"
+
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
 func (r *repositoryImpl) DeleteNote(ctx context.Context, user *domain.User, id string) (bool, error) {

@@ -4,12 +4,11 @@ import (
 	"context"
 
 	"github.com/rs/zerolog"
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
-
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/noteoutbox"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/postgres"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/noteoutbox"
 )
 
 type Repository interface {

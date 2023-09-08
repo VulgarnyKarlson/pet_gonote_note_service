@@ -3,8 +3,9 @@ package note
 import (
 	"fmt"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/note/repository"
 	"go.uber.org/config"
+
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/note/repository"
 )
 
 type Config struct {

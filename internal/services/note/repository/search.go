@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 
-	"github.com/Masterminds/squirrel"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 

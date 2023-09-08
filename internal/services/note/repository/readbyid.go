@@ -7,6 +7,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 

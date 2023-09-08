@@ -6,9 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"go.uber.org/goleak"
-
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/goleak"
 	"go.uber.org/mock/gomock"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/auth"

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v4"
-
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 

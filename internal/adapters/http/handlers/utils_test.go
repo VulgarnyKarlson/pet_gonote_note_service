@@ -6,16 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
-
+	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
+	"go.uber.org/mock/gomock"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
-
-	"github.com/stretchr/testify/assert"
-
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
-	"go.uber.org/mock/gomock"
 )
 
 func TestReadNotes(t *testing.T) {

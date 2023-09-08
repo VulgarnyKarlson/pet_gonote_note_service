@@ -8,13 +8,14 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"go.uber.org/fx"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/postgres"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/rabbitmq"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/logger"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/config"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/noteoutbox"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/outboxproducer"
-	"go.uber.org/fx"
 )
 
 func NewStatsSenderApp() *fx.App {

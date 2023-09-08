@@ -2,7 +2,6 @@
 FROM golang:1.21.0-alpine AS builder
 RUN apk update
 RUN apk add --no-cache make
-ENV GO111MODULE=on
 WORKDIR /go/src/app
 RUN go env -w GOPRIVATE=gitlab.karlson.dev
 
@@ -19,7 +18,7 @@ COPY . .
 RUN make build-note-linux
 
 # Create a minimal production image
-FROM alpine:latest
+FROM alpine:1.21.0-alpine
 
 # It's essential to regularly update the packages within the image to include security patches
 RUN apk update && apk upgrade

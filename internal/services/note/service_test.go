@@ -5,18 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
-
-	"go.uber.org/goleak"
-
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/goleak"
+	"go.uber.org/mock/gomock"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
-
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/note/repository"
-
-	"go.uber.org/mock/gomock"
 )
 
 func TestNoteService_Create(t *testing.T) {

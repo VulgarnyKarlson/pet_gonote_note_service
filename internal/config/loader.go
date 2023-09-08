@@ -5,10 +5,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"go.uber.org/config"
 	"go.uber.org/fx"
-
-	"github.com/spf13/viper"
 )
 
 type ResultConfig struct {

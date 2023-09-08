@@ -4,16 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rs/zerolog"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/redis"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/circuitbreaker"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
-
-	"github.com/rs/zerolog"
-	"google.golang.org/grpc"
-
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/proto"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Client interface {

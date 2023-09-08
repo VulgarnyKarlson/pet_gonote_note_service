@@ -3,10 +3,8 @@ package note
 import (
 	"context"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
-
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
-
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/note/repository"
 )

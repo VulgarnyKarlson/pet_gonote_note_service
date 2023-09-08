@@ -7,11 +7,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 
-	"github.com/gorilla/mux"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/auth"
-
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 )
 

@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v4"
 	amqp "github.com/rabbitmq/amqp091-go"
 
-	"github.com/jackc/pgx/v4"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/postgres"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/rabbitmq"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/noteoutbox"

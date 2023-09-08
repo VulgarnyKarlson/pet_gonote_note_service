@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/rs/zerolog"
-
 	"go.uber.org/fx"
 )
 

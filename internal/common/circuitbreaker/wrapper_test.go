@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
-
 	"github.com/rs/zerolog"
+
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
 func TestNewCircuitBreaker(t *testing.T) {

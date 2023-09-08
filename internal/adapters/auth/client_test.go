@@ -4,14 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/redis"
-
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/circuitbreaker"
-
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/redis"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/circuitbreaker"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/proto"
 )

@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"github.com/redis/go-redis/v9"
+	"github.com/rs/zerolog"
 )
 
 type ClientImpl struct {

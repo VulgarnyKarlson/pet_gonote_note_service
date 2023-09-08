@@ -3,7 +3,7 @@ export
 
 GOCMD=go
 CONFIG=config/local_config.yaml
-GOBUILD=GO111MODULE=on $(GOCMD) build
+GOBUILD=$(GOCMD) build
 CMDNOTEPATH=cmd/service_note/main.go
 CMDPRODUCERPATH=cmd/service_stats_sender/main.go
 BINNOTEPATH=bin/service_note

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/rs/zerolog"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/note"
 )
 

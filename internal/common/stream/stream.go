@@ -24,9 +24,11 @@ type Stream interface {
 	InProxyClose()
 	OutClose()
 	ErrClose()
+	SetUser(user *domain.User)
+	User() *domain.User
 }
 
-type StreamImpl struct {
+type Impl struct {
 	inChan        chan *domain.Note
 	inProxy       chan *domain.Note
 	outChan       chan string
@@ -35,11 +37,12 @@ type StreamImpl struct {
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
 	isClosed      bool
+	user          *domain.User
 }
 
-func NewStream(originalCtx context.Context) (*StreamImpl, context.Context) {
+func NewStream(originalCtx context.Context) (*Impl, context.Context) {
 	ctx, cancel := context.WithCancel(originalCtx)
-	s := &StreamImpl{
+	s := &Impl{
 		inChan:        make(chan *domain.Note),
 		inProxy:       make(chan *domain.Note),
 		outChan:       make(chan string),
@@ -61,7 +64,7 @@ func NewStream(originalCtx context.Context) (*StreamImpl, context.Context) {
 	return s, ctx
 }
 
-func (s *StreamImpl) Close() {
+func (s *Impl) Close() {
 	if s.isClosed {
 		return
 	}
@@ -69,13 +72,13 @@ func (s *StreamImpl) Close() {
 	s.ctxCancel()
 }
 
-func (s *StreamImpl) ctxCancel() {
+func (s *Impl) ctxCancel() {
 	if s.ctxCancelFunc != nil {
 		s.ctxCancelFunc()
 	}
 }
 
-func (s *StreamImpl) Fail(err error) {
+func (s *Impl) Fail(err error) {
 	if s.isClosed {
 		return
 	}
@@ -84,17 +87,17 @@ func (s *StreamImpl) Fail(err error) {
 	s.errChan <- err
 }
 
-func (s *StreamImpl) Done() <-chan struct{} {
+func (s *Impl) Done() <-chan struct{} {
 	return s.ctx.Done()
 }
 
-func (s *StreamImpl) Destroy() {
+func (s *Impl) Destroy() {
 	s.isClosed = true
 	s.Drain()
 	s.ctxCancel()
 }
 
-func (s *StreamImpl) Drain() {
+func (s *Impl) Drain() {
 	for {
 		select {
 		case <-s.InRead():
@@ -115,7 +118,7 @@ func (s *StreamImpl) Drain() {
 	}
 }
 
-func (s *StreamImpl) Err() error {
+func (s *Impl) Err() error {
 	err := s.err
 	if err == nil {
 		err = s.ctx.Err()

@@ -10,7 +10,7 @@ import (
 )
 
 type Service interface {
-	Create(ctx context.Context, user *domain.User, st stream.Stream)
+	Create(ctx context.Context, st stream.Stream)
 	ReadByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error)
 	Update(ctx context.Context, user *domain.User, note *domain.Note) error
 	Delete(ctx context.Context, user *domain.User, id string) (bool, error)
@@ -28,7 +28,6 @@ func NewService(cfg *Config, r repository.Repository) Service {
 
 func (s *serviceImpl) Create(
 	ctx context.Context,
-	user *domain.User,
 	st stream.Stream,
 ) {
 	go func() {
@@ -57,7 +56,7 @@ func (s *serviceImpl) Create(
 			}
 		}
 	}()
-	go s.repo.CreateNote(ctx, user, st)
+	go s.repo.CreateNote(ctx, st)
 }
 
 func (s *serviceImpl) ReadByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error) {

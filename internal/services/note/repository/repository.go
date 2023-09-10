@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rs/zerolog"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/postgres"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/noteoutbox"
@@ -14,7 +14,6 @@ import (
 type Repository interface {
 	CreateNote(
 		ctx context.Context,
-		user *domain.User,
 		st stream.Stream,
 	)
 	ReadNoteByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error)
@@ -29,7 +28,7 @@ type Repository interface {
 
 type repositoryImpl struct {
 	cfg        *Config
-	db         *postgres.Pool
+	db         *pgxpool.Pool
 	outboxRepo noteoutbox.Repository
 	logger     *zerolog.Logger
 }
@@ -37,7 +36,7 @@ type repositoryImpl struct {
 func NewRepository(
 	logger *zerolog.Logger,
 	cfg *Config,
-	db *postgres.Pool,
+	db *pgxpool.Pool,
 	outboxRepo noteoutbox.Repository,
 ) Repository {
 	return &repositoryImpl{logger: logger, cfg: cfg, db: db, outboxRepo: outboxRepo}

@@ -8,8 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
-
+	stream "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
 	domain "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -38,15 +37,15 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // CreateNote mocks base method.
-func (m *MockRepository) CreateNote(ctx context.Context, user *domain.User, st stream.Stream) {
+func (m *MockRepository) CreateNote(ctx context.Context, st stream.Stream) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "CreateNote", ctx, user, st)
+	m.ctrl.Call(m, "CreateNote", ctx, st)
 }
 
 // CreateNote indicates an expected call of CreateNote.
-func (mr *MockRepositoryMockRecorder) CreateNote(ctx, user, st interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) CreateNote(ctx, st interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNote", reflect.TypeOf((*MockRepository)(nil).CreateNote), ctx, user, st)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNote", reflect.TypeOf((*MockRepository)(nil).CreateNote), ctx, st)
 }
 
 // DeleteNote mocks base method.

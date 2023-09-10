@@ -83,7 +83,6 @@ func TestNoteService_Create(t *testing.T) {
 			mockRepo = repository.NewMockRepository(ctrl)
 			mockRepo.EXPECT().CreateNote(
 				gomock.Any(),
-				gomock.Any(),
 				st,
 			).Times(1)
 			st.EXPECT().Done().AnyTimes()
@@ -97,6 +96,7 @@ func TestNoteService_Create(t *testing.T) {
 			st.EXPECT().InProxyRead().Return(proxyWriteChan).AnyTimes()
 			st.EXPECT().InRead().Return(proxyWriteChan).AnyTimes()
 			st.EXPECT().InProxyWrite(gomock.Any()).Times(tc.proxyWriteCount)
+			st.EXPECT().User().Return(domain.NewUser("1", "")).AnyTimes()
 			go func() {
 				for _, note := range tc.notes {
 					proxyWriteChan <- note
@@ -108,7 +108,7 @@ func TestNoteService_Create(t *testing.T) {
 			}()
 
 			s := NewService(cfg, mockRepo)
-			go s.Create(context.TODO(), domain.NewUser("1", ""), st)
+			go s.Create(context.TODO(), st)
 
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 			defer cancel()

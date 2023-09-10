@@ -249,3 +249,29 @@ func (mr *MockStreamMockRecorder) OutWrite(note interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OutWrite", reflect.TypeOf((*MockStream)(nil).OutWrite), note)
 }
+
+// SetUser mocks base method.
+func (m *MockStream) SetUser(user *domain.User) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetUser", user)
+}
+
+// SetUser indicates an expected call of SetUser.
+func (mr *MockStreamMockRecorder) SetUser(user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUser", reflect.TypeOf((*MockStream)(nil).SetUser), user)
+}
+
+// User mocks base method.
+func (m *MockStream) User() *domain.User {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "User")
+	ret0, _ := ret[0].(*domain.User)
+	return ret0
+}
+
+// User indicates an expected call of User.
+func (mr *MockStreamMockRecorder) User() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "User", reflect.TypeOf((*MockStream)(nil).User))
+}

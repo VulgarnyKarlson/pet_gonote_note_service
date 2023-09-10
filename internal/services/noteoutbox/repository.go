@@ -1,58 +1,60 @@
 package noteoutbox
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/postgres"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
 var nullNote = &domain.Note{}
 
 type Repository interface {
-	Create(tx *postgres.Transaction, note *domain.Note) (err error)
-	Update(tx *postgres.Transaction, note *domain.Note) (err error)
-	Delete(tx *postgres.Transaction, note *domain.Note) (err error)
-	FindByID(tx *postgres.Transaction, note *domain.Note) (err error)
-	Search(tx *postgres.Transaction, user *domain.User) (err error)
-	GetAllOutbox(tx *postgres.Transaction) (notesOutbox []*NoteOutbox, err error)
-	MarkAsSent(tx *postgres.Transaction, notesOutbox *NoteOutbox) error
+	Create(ctx context.Context, tx pgx.Tx, note *domain.Note) (err error)
+	Update(ctx context.Context, tx pgx.Tx, note *domain.Note) (err error)
+	Delete(ctx context.Context, tx pgx.Tx, note *domain.Note) (err error)
+	FindByID(ctx context.Context, tx pgx.Tx, note *domain.Note) (err error)
+	Search(ctx context.Context, tx pgx.Tx, user *domain.User) (err error)
+	GetAllOutbox(ctx context.Context, tx pgx.Tx) (notesOutbox []*NoteOutbox, err error)
+	MarkAsSent(ctx context.Context, tx pgx.Tx, notesOutbox *NoteOutbox) error
 }
 
 type repositoryImpl struct {
-	db *postgres.Pool
+	db *pgxpool.Pool
 }
 
-func NewRepository(db *postgres.Pool) Repository {
+func NewRepository(db *pgxpool.Pool) Repository {
 	nullNote.SetID("b40fae8f-7689-a545-d431-14f6374a79cc")
 	return &repositoryImpl{db: db}
 }
 
-func (r *repositoryImpl) Create(tx *postgres.Transaction, note *domain.Note) (err error) {
-	return r.insert(tx, note, NoteActionCreated)
+func (r *repositoryImpl) Create(ctx context.Context, tx pgx.Tx, note *domain.Note) (err error) {
+	return r.insert(ctx, tx, note, NoteActionCreated)
 }
 
-func (r *repositoryImpl) Update(tx *postgres.Transaction, note *domain.Note) (err error) {
-	return r.insert(tx, note, NoteActionUpdated)
+func (r *repositoryImpl) Update(ctx context.Context, tx pgx.Tx, note *domain.Note) (err error) {
+	return r.insert(ctx, tx, note, NoteActionUpdated)
 }
 
-func (r *repositoryImpl) Delete(tx *postgres.Transaction, note *domain.Note) (err error) {
-	return r.insert(tx, note, NoteActionDeleted)
+func (r *repositoryImpl) Delete(ctx context.Context, tx pgx.Tx, note *domain.Note) (err error) {
+	return r.insert(ctx, tx, note, NoteActionDeleted)
 }
 
-func (r *repositoryImpl) FindByID(tx *postgres.Transaction, note *domain.Note) (err error) {
-	return r.insert(tx, note, NoteActionRead)
+func (r *repositoryImpl) FindByID(ctx context.Context, tx pgx.Tx, note *domain.Note) (err error) {
+	return r.insert(ctx, tx, note, NoteActionRead)
 }
 
-func (r *repositoryImpl) Search(tx *postgres.Transaction, user *domain.User) (err error) {
+func (r *repositoryImpl) Search(ctx context.Context, tx pgx.Tx, user *domain.User) (err error) {
 	tmp := nullNote.Copy()
 	tmp.SetUserID(user.ID())
-	return r.insert(tx, tmp, NoteActionSearch)
+	return r.insert(ctx, tx, tmp, NoteActionSearch)
 }
 
-func (r *repositoryImpl) GetAllOutbox(tx *postgres.Transaction) (notesOutbox []*NoteOutbox, err error) {
+func (r *repositoryImpl) GetAllOutbox(ctx context.Context, tx pgx.Tx) (notesOutbox []*NoteOutbox, err error) {
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	query, args, err := psql.Select("id", "event_id", "action", "user_id", "note_id", "sent").
 		From("notes_outbox").
@@ -63,7 +65,7 @@ func (r *repositoryImpl) GetAllOutbox(tx *postgres.Transaction) (notesOutbox []*
 		return nil, fmt.Errorf("SQL build error: %w", err)
 	}
 
-	rows, err := tx.Query(query, args...)
+	rows, err := tx.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("trx err: %w", err)
 	}
@@ -82,7 +84,7 @@ func (r *repositoryImpl) GetAllOutbox(tx *postgres.Transaction) (notesOutbox []*
 	return notesOutbox, nil
 }
 
-func (r *repositoryImpl) MarkAsSent(tx *postgres.Transaction, notesOutbox *NoteOutbox) error {
+func (r *repositoryImpl) MarkAsSent(ctx context.Context, tx pgx.Tx, notesOutbox *NoteOutbox) error {
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	query, args, err := psql.Update("notes_outbox").
 		Set("sent", true).
@@ -93,7 +95,7 @@ func (r *repositoryImpl) MarkAsSent(tx *postgres.Transaction, notesOutbox *NoteO
 		return fmt.Errorf("SQL build error: %w", err)
 	}
 
-	_, err = tx.Exec(query, args...)
+	_, err = tx.Exec(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("trx err: %w", err)
 	}
@@ -101,7 +103,7 @@ func (r *repositoryImpl) MarkAsSent(tx *postgres.Transaction, notesOutbox *NoteO
 	return nil
 }
 
-func (r *repositoryImpl) insert(tx *postgres.Transaction, note *domain.Note, actionType NoteOutBoxAction) (err error) {
+func (r *repositoryImpl) insert(ctx context.Context, tx pgx.Tx, note *domain.Note, actionType NoteOutBoxAction) (err error) {
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	noteOutbox, err := NewNoteOutbox(note.ID(), actionType, note.UserID())
 	if err != nil {
@@ -119,7 +121,7 @@ func (r *repositoryImpl) insert(tx *postgres.Transaction, note *domain.Note, act
 		return fmt.Errorf("SQL build error: %w", err)
 	}
 
-	_, err = tx.Exec(query, args...)
+	_, err = tx.Exec(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("trx err: %w", err)
 	}

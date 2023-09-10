@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rs/zerolog"
 	"go.uber.org/fx"
 )
@@ -15,7 +16,7 @@ func NewModule() fx.Option {
 			New,
 		),
 		fx.Invoke(
-			func(lc fx.Lifecycle, wrapper *Pool) {
+			func(lc fx.Lifecycle, wrapper *pgxpool.Pool) {
 				lc.Append(
 					fx.Hook{
 						OnStart: func(context.Context) error {

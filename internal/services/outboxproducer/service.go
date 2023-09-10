@@ -8,16 +8,16 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	amqp "github.com/rabbitmq/amqp091-go"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/postgres"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/rabbitmq"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/noteoutbox"
 )
 
 type OutBoxProducer struct {
 	Producer   *rabbitmq.Publisher
-	db         *postgres.Pool
+	db         *pgxpool.Pool
 	outboxRepo noteoutbox.Repository
 }
 
@@ -28,77 +28,58 @@ type outboxMessage struct {
 	Timestamp string `json:"timestamp"`
 }
 
-func NewOutBoxProducer(db *postgres.Pool, outboxRepo noteoutbox.Repository, publisher *rabbitmq.Publisher) *OutBoxProducer {
+func NewOutBoxProducer(db *pgxpool.Pool, outboxRepo noteoutbox.Repository, publisher *rabbitmq.Publisher) *OutBoxProducer {
 	return &OutBoxProducer{Producer: publisher, db: db, outboxRepo: outboxRepo}
 }
 
-func (o *OutBoxProducer) Produce(ctx context.Context) (count int, err error) {
-	txDB, err := o.db.NewTransaction(ctx, pgx.TxOptions{})
-	if err != nil {
-		return 0, fmt.Errorf("error creating db transaction: %w", err)
-	}
-	txPB, err := o.Producer.Tx()
-	if err != nil {
-		return 0, fmt.Errorf("error creating producer transaction: %w", err)
+func (o *OutBoxProducer) Produce(ctx context.Context) (int, error) {
+	var count int
+	txPB, errPB := o.Producer.Tx()
+	if errPB != nil {
+		return 0, fmt.Errorf("error creating producer transaction: %w", errPB)
 	}
 	defer func(txPB *amqp.Channel) {
 		closeErr := txPB.Close()
 		if closeErr != nil {
-			err = errors.Join(err, closeErr)
+			errPB = errors.Join(errPB, closeErr)
 		}
 	}(txPB)
-	defer func() {
+
+	errTx := o.db.BeginTxFunc(ctx, pgx.TxOptions{}, func(txDB pgx.Tx) error {
+		notesOutbox, err := o.outboxRepo.GetAllOutbox(ctx, txDB)
 		if err != nil {
-			rollbackErr := txPB.TxRollback()
-			if rollbackErr != nil {
-				err = errors.Join(err, rollbackErr)
+			return err
+		}
+		count = len(notesOutbox)
+
+		for _, noteOutbox := range notesOutbox {
+			b, errMarshal := json.Marshal(outboxMessage{
+				UserID:    noteOutbox.UserID,
+				Action:    noteOutbox.Action,
+				NoteID:    noteOutbox.NoteID,
+				Timestamp: time.Now().Format(time.RFC3339),
+			})
+			if errMarshal != nil {
+				return errMarshal
+			}
+			err = o.Producer.Publish(ctx, txPB, b)
+			if err != nil {
+				return err
+			}
+			err = o.outboxRepo.MarkAsSent(ctx, txDB, noteOutbox)
+			if err != nil {
+				return err
 			}
 		}
-	}()
-
-	defer txDB.ConnRelease()
-	defer func() {
-		if err != nil {
-			rollbackErr := txDB.Rollback()
-			if rollbackErr != nil {
-				err = errors.Join(err, rollbackErr)
-			}
+		return nil
+	})
+	if errTx != nil {
+		errPB = txPB.TxRollback()
+		if errPB != nil {
+			errTx = errors.Join(errTx, errPB)
 		}
-	}()
-
-	notesOutbox, err := o.outboxRepo.GetAllOutbox(txDB)
-	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("error creating db transaction: %w", errTx)
 	}
 
-	for _, noteOutbox := range notesOutbox {
-		b, errMarshal := json.Marshal(outboxMessage{
-			UserID:    noteOutbox.UserID,
-			Action:    noteOutbox.Action,
-			NoteID:    noteOutbox.NoteID,
-			Timestamp: time.Now().Format(time.RFC3339),
-		})
-		if errMarshal != nil {
-			return 0, err
-		}
-		err = o.Producer.Publish(ctx, txPB, b)
-		if err != nil {
-			return 0, err
-		}
-		err = o.outboxRepo.MarkAsSent(txDB, noteOutbox)
-		if err != nil {
-			return 0, err
-		}
-	}
-
-	err = txPB.TxCommit()
-	if err != nil {
-		return 0, err
-	}
-	err = txDB.Commit()
-	if err != nil {
-		return 0, err
-	}
-
-	return len(notesOutbox), nil
+	return count, errTx
 }

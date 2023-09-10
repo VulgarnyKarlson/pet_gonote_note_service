@@ -1,27 +1,27 @@
 package stream
 
-func (s *StreamImpl) InClose() {
+func (s *Impl) InClose() {
 	if s.isClosed {
 		return
 	}
 	close(s.inChan)
 }
 
-func (s *StreamImpl) InProxyClose() {
+func (s *Impl) InProxyClose() {
 	if s.isClosed {
 		return
 	}
 	close(s.inProxy)
 }
 
-func (s *StreamImpl) OutClose() {
+func (s *Impl) OutClose() {
 	if s.isClosed {
 		return
 	}
 	close(s.outChan)
 }
 
-func (s *StreamImpl) ErrClose() {
+func (s *Impl) ErrClose() {
 	if s.isClosed {
 		return
 	}

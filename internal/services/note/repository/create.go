@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/jackc/pgx/v4"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/postgres"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
@@ -18,75 +16,58 @@ import (
 
 func (r *repositoryImpl) CreateNote(
 	ctx context.Context,
-	user *domain.User,
 	st stream.Stream,
 ) {
-	tx, err := r.db.NewTransaction(ctx, pgx.TxOptions{})
+	err := r.db.BeginFunc(ctx, func(tx pgx.Tx) error {
+		batch := make([]*domain.Note, 0, r.cfg.CreateNotesBatchSize)
+	loop:
+		for {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-st.Done():
+				return nil
+			case note, ok := <-st.InProxyRead():
+				if !ok {
+					break loop
+				}
+				batch = append(batch, note)
+				if len(batch) == r.cfg.CreateNotesBatchSize {
+					if err := r.insertBatch(ctx, tx, batch, st); err != nil {
+						return err
+					}
+
+					batch = batch[:0]
+				}
+			}
+		}
+
+		if len(batch) > 0 {
+			if err := r.insertBatch(ctx, tx, batch, st); err != nil {
+				return nil
+			}
+		}
+
+		if err := st.Err(); err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if err != nil {
 		r.logger.Err(err).Msg("error creating transaction")
 		st.Fail(customerrors.ErrRepositoryError)
-		return
 	}
-	var txErr error
-	var isCommitted bool
-	defer tx.ConnRelease()
-	defer func() {
-		if !isCommitted {
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				txErr = errors.Join(txErr, rollbackErr)
-			}
-			st.Fail(txErr)
-		}
-	}()
-
-	batch := make([]*domain.Note, 0, r.cfg.CreateNotesBatchSize)
-loop:
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-st.Done():
-			return
-		case note, ok := <-st.InProxyRead():
-			if !ok {
-				break loop
-			}
-			batch = append(batch, note)
-			if len(batch) == r.cfg.CreateNotesBatchSize {
-				if err = r.insertBatch(tx, batch, user, st); err != nil {
-					txErr = err
-					return
-				}
-
-				batch = batch[:0]
-			}
-		}
-	}
-
-	if len(batch) > 0 {
-		if err = r.insertBatch(tx, batch, user, st); err != nil {
-			txErr = err
-			return
-		}
-	}
-
-	if err = st.Err(); err != nil {
-		txErr = err
-		return
-	}
-
-	if err = tx.Commit(); err != nil {
-		txErr = err
-		return
-	}
-	isCommitted = true
-
 	st.OutClose()
 	st.Close()
 }
 
-func (r *repositoryImpl) insertBatch(tx *postgres.Transaction, notes []*domain.Note, user *domain.User, st stream.Stream) error {
+func (r *repositoryImpl) insertBatch(
+	ctx context.Context,
+	tx pgx.Tx,
+	notes []*domain.Note,
+	st stream.Stream,
+) error {
 	noteBatch := &pgx.Batch{}
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	mBatch := make([]*DBModel, 0, len(notes))
@@ -96,7 +77,7 @@ func (r *repositoryImpl) insertBatch(tx *postgres.Transaction, notes []*domain.N
 			return fmt.Errorf("error generating uuid: %w", err)
 		}
 		note.SetID(noteID)
-		note.SetUserID(user.ID())
+		note.SetUserID(st.User().ID())
 		domainNote := noteDomainToDBModel(note)
 		mBatch = append(mBatch, domainNote)
 	}
@@ -104,13 +85,13 @@ func (r *repositoryImpl) insertBatch(tx *postgres.Transaction, notes []*domain.N
 	for _, note := range mBatch {
 		query, args, _ := psql.Insert("notes").
 			Columns("id", "user_id", "title", "content", "created_at", "updated_at").
-			Values(note.ID, user.ID(), note.Title, note.Content, note.CreatedAt.Format(time.RFC3339), note.UpdatedAt.Format(time.RFC3339)).
+			Values(note.ID, st.User().ID(), note.Title, note.Content, note.CreatedAt.Format(time.RFC3339), note.UpdatedAt.Format(time.RFC3339)).
 			ToSql()
 
 		noteBatch.Queue(query, args...)
 	}
 
-	br := tx.SendBatch(noteBatch)
+	br := tx.SendBatch(ctx, noteBatch)
 
 	_, err := br.Exec()
 	if err != nil {
@@ -122,7 +103,7 @@ func (r *repositoryImpl) insertBatch(tx *postgres.Transaction, notes []*domain.N
 	}
 
 	for _, note := range notes {
-		err = r.outboxRepo.Create(tx, note)
+		err = r.outboxRepo.Create(ctx, tx, note)
 		if err != nil {
 			return fmt.Errorf("error creating note outbox: %w", err)
 		}

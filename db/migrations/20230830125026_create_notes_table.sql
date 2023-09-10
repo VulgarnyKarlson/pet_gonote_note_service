@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS notes (
     content TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fts tsvector generated always as (to_tsvector('english', title || ' ' || content)) stored,
     primary key (user_id, note_id)
 );
 

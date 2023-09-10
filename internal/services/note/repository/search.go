@@ -21,11 +21,11 @@ func (r *repositoryImpl) SearchNote(
 		queryBuilder := psql.Select("note_id", "user_id", "title", "content", "created_at", "updated_at").From("notes")
 		queryBuilder = queryBuilder.Where(squirrel.Eq{"user_id": user.ID()})
 		if criteria.Title != "" {
-			queryBuilder = queryBuilder.Where("title LIKE ?", fmt.Sprintf("%%%s%%", criteria.Title))
+			queryBuilder = queryBuilder.Where("fts @@ plainto_tsquery('english', ?)", criteria.Title)
 		}
 
 		if criteria.Content != "" {
-			queryBuilder = queryBuilder.Where("content LIKE ?", fmt.Sprintf("%%%s%%", criteria.Content))
+			queryBuilder = queryBuilder.Where("fts @@ plainto_tsquery('english', ?)", criteria.Content)
 		}
 
 		if !criteria.FromDate.IsZero() {

@@ -23,7 +23,7 @@
 - [x] DDD
 - [x] CQRS
 - [x] Pre-commit hooks + golangci-lint
-- [x] DB optimization ( indexes, batch insert low memory stream )
+- [x] DB optimization ( indexes, batch insert low memory stream, search by text )
 
 
 ### Installation

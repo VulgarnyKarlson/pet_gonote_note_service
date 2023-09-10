@@ -71,11 +71,13 @@ func (r *repositoryImpl) insertBatch(
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	mBatch := make([]*DBModel, 0, len(notes))
 	for _, note := range notes {
-		noteID, err := r.idGenerator.NextID()
-		if err != nil {
-			return fmt.Errorf("error generating uuid: %w", err)
+		if note.ID() == 0 {
+			noteID, err := r.idGenerator.NextID()
+			if err != nil {
+				return fmt.Errorf("error generating uuid: %w", err)
+			}
+			note.SetID(noteID)
 		}
-		note.SetID(noteID)
 		note.SetUserID(st.User().ID())
 		domainNote := noteDomainToDBModel(note)
 		mBatch = append(mBatch, domainNote)
@@ -85,6 +87,7 @@ func (r *repositoryImpl) insertBatch(
 		query, args, _ := psql.Insert("notes").
 			Columns("note_id", "user_id", "title", "content", "created_at", "updated_at").
 			Values(note.ID, st.User().ID(), note.Title, note.Content, note.CreatedAt.Format(time.RFC3339), note.UpdatedAt.Format(time.RFC3339)).
+			Suffix("ON CONFLICT DO NOTHING").
 			ToSql()
 
 		noteBatch.Queue(query, args...)

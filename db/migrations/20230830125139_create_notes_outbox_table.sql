@@ -3,8 +3,8 @@
 CREATE TABLE IF NOT EXISTS notes_outbox (
     id SERIAL PRIMARY KEY,
     event_id UUID,
-    note_id UUID,
-    user_id UUID,
+    note_id bigint NOT NULL,
+    user_id bigint NOT NULL,
     action varchar(10),
     sent BOOLEAN DEFAULT FALSE
 )

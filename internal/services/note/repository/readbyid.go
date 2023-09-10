@@ -11,14 +11,14 @@ import (
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
-func (r *repositoryImpl) ReadNoteByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error) {
+func (r *repositoryImpl) ReadNoteByID(ctx context.Context, user *domain.User, id uint64) (*domain.Note, error) {
 	var note *domain.Note
 	err := r.db.BeginFunc(ctx, func(tx pgx.Tx) error {
 		psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
-		query, args, err := psql.Select("id", "title", "content", "created_at", "updated_at").
+		query, args, err := psql.Select("note_id", "title", "content", "created_at", "updated_at").
 			From("notes").
-			Where(squirrel.Eq{"id": id, "user_id": user.ID()}).
+			Where(squirrel.Eq{"note_id": id, "user_id": user.ID()}).
 			ToSql()
 
 		if err != nil {

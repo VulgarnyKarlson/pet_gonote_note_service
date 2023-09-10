@@ -15,10 +15,10 @@ type Stream interface {
 	Err() error
 	InWrite(note *domain.Note)
 	InProxyWrite(note *domain.Note)
-	OutWrite(note string)
+	OutWrite(note uint64)
 	InRead() <-chan *domain.Note
 	InProxyRead() <-chan *domain.Note
-	OutRead() <-chan string
+	OutRead() <-chan uint64
 	ErrChan() <-chan error
 	InClose()
 	InProxyClose()
@@ -31,7 +31,7 @@ type Stream interface {
 type Impl struct {
 	inChan        chan *domain.Note
 	inProxy       chan *domain.Note
-	outChan       chan string
+	outChan       chan uint64
 	errChan       chan error
 	err           error
 	ctx           context.Context
@@ -45,7 +45,7 @@ func NewStream(originalCtx context.Context) (*Impl, context.Context) {
 	s := &Impl{
 		inChan:        make(chan *domain.Note),
 		inProxy:       make(chan *domain.Note),
-		outChan:       make(chan string),
+		outChan:       make(chan uint64),
 		errChan:       make(chan error),
 		ctx:           ctx,
 		ctxCancelFunc: cancel,

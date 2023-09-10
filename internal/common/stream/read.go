@@ -10,7 +10,7 @@ func (s *Impl) InProxyRead() <-chan *domain.Note {
 	return s.inProxy
 }
 
-func (s *Impl) OutRead() <-chan string {
+func (s *Impl) OutRead() <-chan uint64 {
 	return s.outChan
 }
 

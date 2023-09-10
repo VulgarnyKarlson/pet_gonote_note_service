@@ -22,9 +22,9 @@ type OutBoxProducer struct {
 }
 
 type outboxMessage struct {
-	UserID    string `json:"user_id"`
+	UserID    uint64 `json:"user_id"`
 	Action    string `json:"action"`
-	NoteID    string `json:"note_id"`
+	NoteID    uint64 `json:"note_id"`
 	Timestamp string `json:"timestamp"`
 }
 

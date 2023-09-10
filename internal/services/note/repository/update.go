@@ -20,8 +20,8 @@ func (r *repositoryImpl) UpdateNote(ctx context.Context, user *domain.User, note
 			Set("title", note.Title()).
 			Set("content", note.Content()).
 			Set("updated_at", note.UpdatedAt().Format(time.RFC3339)).
-			Where(squirrel.Eq{"id": note.ID(), "user_id": note.UserID()}).
-			Suffix("RETURNING id").
+			Where(squirrel.Eq{"note_id": note.ID(), "user_id": note.UserID()}).
+			Suffix("RETURNING note_id").
 			ToSql()
 
 		rows, err := tx.Query(ctx, query, args...)
@@ -29,14 +29,14 @@ func (r *repositoryImpl) UpdateNote(ctx context.Context, user *domain.User, note
 			return fmt.Errorf("trx err: %w", err)
 		}
 		defer rows.Close()
-		noteID := ""
+		var noteID uint64
 		for rows.Next() {
 			if scanErr := rows.Scan(&noteID); scanErr != nil {
 				r.logger.Err(scanErr).Msg("can't scan noteID")
 				return customerrors.ErrNotFoundNoteID
 			}
 		}
-		if noteID == "" {
+		if noteID == 0 {
 			return customerrors.ErrNotFoundNoteID
 		}
 

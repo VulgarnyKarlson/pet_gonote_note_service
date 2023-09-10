@@ -5,6 +5,7 @@ import (
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rs/zerolog"
+	"github.com/sony/sonyflake"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
@@ -16,9 +17,9 @@ type Repository interface {
 		ctx context.Context,
 		st stream.Stream,
 	)
-	ReadNoteByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error)
+	ReadNoteByID(ctx context.Context, user *domain.User, id uint64) (*domain.Note, error)
 	UpdateNote(ctx context.Context, user *domain.User, note *domain.Note) error
-	DeleteNote(ctx context.Context, user *domain.User, id string) (bool, error)
+	DeleteNote(ctx context.Context, user *domain.User, id uint64) (bool, error)
 	SearchNote(
 		ctx context.Context,
 		user *domain.User,
@@ -27,10 +28,11 @@ type Repository interface {
 }
 
 type repositoryImpl struct {
-	cfg        *Config
-	db         *pgxpool.Pool
-	outboxRepo noteoutbox.Repository
-	logger     *zerolog.Logger
+	cfg         *Config
+	db          *pgxpool.Pool
+	outboxRepo  noteoutbox.Repository
+	logger      *zerolog.Logger
+	idGenerator *sonyflake.Sonyflake
 }
 
 func NewRepository(
@@ -39,5 +41,6 @@ func NewRepository(
 	db *pgxpool.Pool,
 	outboxRepo noteoutbox.Repository,
 ) Repository {
-	return &repositoryImpl{logger: logger, cfg: cfg, db: db, outboxRepo: outboxRepo}
+	idGenerator := sonyflake.NewSonyflake(sonyflake.Settings{})
+	return &repositoryImpl{logger: logger, cfg: cfg, db: db, outboxRepo: outboxRepo, idGenerator: idGenerator}
 }

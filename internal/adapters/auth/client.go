@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
@@ -76,7 +77,12 @@ func (c *ClientImpl) ValidateToken(ctx context.Context, token string) (*Validate
 	c.circuitbreaker.Success()
 	validateTokenResponse := &ValidateTokenResponse{Valid: resp.Valid}
 	if resp.Valid {
-		validateTokenResponse.User = domain.NewUser(resp.User.GetId(), resp.User.GetUsername())
+		id, errParse := strconv.ParseUint(resp.User.GetId(), 10, 64)
+		if errParse != nil {
+			c.logger.Err(errParse).Msg("failed to parse user id")
+			return nil, customerrors.ErrAuthServiceError
+		}
+		validateTokenResponse.User = domain.NewUser(id, resp.User.GetUsername())
 	}
 	err = c.store(ctx, token, validateTokenResponse)
 	if err != nil {

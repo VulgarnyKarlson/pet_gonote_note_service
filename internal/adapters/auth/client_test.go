@@ -39,7 +39,7 @@ func TestValidateToken(t *testing.T) {
 			},
 			mockErr: nil,
 			expectedResult: &ValidateTokenResponse{
-				User:  domain.NewUser("1", "JohnDoe"),
+				User:  domain.NewUser(1, "JohnDoe"),
 				Valid: true,
 			},
 			expectedErr: nil,

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/hashicorp/go-uuid"
 	"github.com/jackc/pgx/v4"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
@@ -72,7 +71,7 @@ func (r *repositoryImpl) insertBatch(
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	mBatch := make([]*DBModel, 0, len(notes))
 	for _, note := range notes {
-		noteID, err := uuid.GenerateUUID()
+		noteID, err := r.idGenerator.NextID()
 		if err != nil {
 			return fmt.Errorf("error generating uuid: %w", err)
 		}
@@ -84,7 +83,7 @@ func (r *repositoryImpl) insertBatch(
 
 	for _, note := range mBatch {
 		query, args, _ := psql.Insert("notes").
-			Columns("id", "user_id", "title", "content", "created_at", "updated_at").
+			Columns("note_id", "user_id", "title", "content", "created_at", "updated_at").
 			Values(note.ID, st.User().ID(), note.Title, note.Content, note.CreatedAt.Format(time.RFC3339), note.UpdatedAt.Format(time.RFC3339)).
 			ToSql()
 

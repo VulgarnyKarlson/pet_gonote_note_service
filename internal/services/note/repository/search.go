@@ -18,7 +18,7 @@ func (r *repositoryImpl) SearchNote(
 	var domainOut []*domain.Note
 	err := r.db.BeginFunc(ctx, func(tx pgx.Tx) error {
 		psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-		queryBuilder := psql.Select("id", "user_id", "title", "content", "created_at", "updated_at").From("notes")
+		queryBuilder := psql.Select("note_id", "user_id", "title", "content", "created_at", "updated_at").From("notes")
 		queryBuilder = queryBuilder.Where(squirrel.Eq{"user_id": user.ID()})
 		if criteria.Title != "" {
 			queryBuilder = queryBuilder.Where("title LIKE ?", fmt.Sprintf("%%%s%%", criteria.Title))

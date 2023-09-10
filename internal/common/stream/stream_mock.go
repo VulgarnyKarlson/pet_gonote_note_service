@@ -225,10 +225,10 @@ func (mr *MockStreamMockRecorder) OutClose() *gomock.Call {
 }
 
 // OutRead mocks base method.
-func (m *MockStream) OutRead() <-chan string {
+func (m *MockStream) OutRead() <-chan uint64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "OutRead")
-	ret0, _ := ret[0].(<-chan string)
+	ret0, _ := ret[0].(<-chan uint64)
 	return ret0
 }
 
@@ -239,7 +239,7 @@ func (mr *MockStreamMockRecorder) OutRead() *gomock.Call {
 }
 
 // OutWrite mocks base method.
-func (m *MockStream) OutWrite(note string) {
+func (m *MockStream) OutWrite(note uint64) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "OutWrite", note)
 }

@@ -32,10 +32,12 @@ repos:
       - id: go-unit-tests
         name: go unit tests
         entry: bash -c 'make test name=unit'
+        pass_filenames: false
         language: system
       - id: go build
         name: go build
         entry: bash -c 'make build-note && make build-producer'
+        pass_filenames: false
         language: system
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v8.0.0

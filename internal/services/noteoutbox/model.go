@@ -25,12 +25,12 @@ type NoteOutbox struct {
 	ID      int    `json:"id"`
 	EventID string `json:"event_id"`
 	Action  string `json:"action"`
-	UserID  string `json:"user_id"`
-	NoteID  string `json:"note_id"`
+	UserID  uint64 `json:"user_id"`
+	NoteID  uint64 `json:"note_id"`
 	Sent    bool   `json:"sent"`
 }
 
-func NewNoteOutbox(noteID string, eventType NoteOutBoxAction, userID string) (*NoteOutbox, error) {
+func NewNoteOutbox(noteID uint64, eventType NoteOutBoxAction, userID uint64) (*NoteOutbox, error) {
 	eventID, err := uuid.GenerateUUID()
 	if err != nil {
 		return nil, fmt.Errorf("error generating uuid: %w", err)

@@ -10,7 +10,7 @@ import (
 )
 
 type сreateNoteResponse struct {
-	NoteIDs    []string `json:"note_id"`
+	NoteIDs    []uint64 `json:"note_id"`
 	TotalNotes int      `json:"total_notes"`
 }
 
@@ -26,7 +26,7 @@ func (h *NoteHandlers) CreateNote(r *http.Request) (*adapterHTTP.Response, error
 		}
 	}()
 
-	noteCounter, noteIDs := 0, make([]string, 0)
+	noteCounter, noteIDs := 0, make([]uint64, 0)
 
 	for {
 		select {

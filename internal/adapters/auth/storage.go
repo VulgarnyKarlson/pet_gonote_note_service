@@ -9,7 +9,7 @@ import (
 )
 
 type storageModelDB struct {
-	UserID   string `json:"user_id"`
+	UserID   uint64 `json:"user_id"`
 	UserName string `json:"user_name"`
 	IsValid  bool   `json:"is_valid"`
 }

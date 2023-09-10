@@ -5,15 +5,15 @@ import (
 )
 
 type Note struct {
-	id        string
-	userID    string
+	id        uint64
+	userID    uint64
 	title     string
 	content   string
 	createdAt time.Time
 	updatedAt time.Time
 }
 
-func NewNote(noteID, userID, title, content string) (*Note, error) {
+func NewNote(noteID, userID uint64, title, content string) (*Note, error) {
 	note := &Note{
 		id:      noteID,
 		userID:  userID,
@@ -34,19 +34,19 @@ func (n *Note) Copy() *Note {
 	}
 }
 
-func (n *Note) ID() string {
+func (n *Note) ID() uint64 {
 	return n.id
 }
 
-func (n *Note) SetID(id string) {
+func (n *Note) SetID(id uint64) {
 	n.id = id
 }
 
-func (n *Note) UserID() string {
+func (n *Note) UserID() uint64 {
 	return n.userID
 }
 
-func (n *Note) SetUserID(userID string) {
+func (n *Note) SetUserID(userID uint64) {
 	n.userID = userID
 }
 

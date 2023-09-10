@@ -89,12 +89,10 @@ gen: ## gen - generate proto files
 
 .PHONY: build-note
 build-note: ## build-note -  note service binary
-	make gen && \
 	$(GOBUILD) -o ${BINNOTEPATH} ${CMDNOTEPATH}
 
 .PHONY: build-producer
 build-producer: ## build-producer producer service binary
-	make gen && \
 	$(GOBUILD) -o ${BINPRODUCERPATH} ${CMDPRODUCERPATH}
 
 .PHONY: run-note

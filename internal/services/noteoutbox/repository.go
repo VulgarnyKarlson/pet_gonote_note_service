@@ -28,7 +28,7 @@ type repositoryImpl struct {
 }
 
 func NewRepository(db *pgxpool.Pool) Repository {
-	nullNote.SetID("b40fae8f-7689-a545-d431-14f6374a79cc")
+	nullNote.SetID(10)
 	return &repositoryImpl{db: db}
 }
 

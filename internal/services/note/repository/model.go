@@ -7,8 +7,8 @@ import (
 )
 
 type DBModel struct {
-	ID        string    `json:"id,omitempty"`
-	UserID    string    `json:"user_id,omitempty"`
+	ID        uint64    `json:"id,omitempty"`
+	UserID    uint64    `json:"user_id,omitempty"`
 	Title     string    `json:"title,omitempty"`
 	Content   string    `json:"content,omitempty"`
 	CreatedAt time.Time `json:"created_at,omitempty"`

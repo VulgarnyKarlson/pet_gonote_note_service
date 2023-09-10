@@ -63,7 +63,7 @@ func (mr *MockClientMockRecorder) Connect() *gomock.Call {
 }
 
 // SetProtoService mocks base method.
-func (m *MockClient) SetProtoService(service interface{}) {
+func (m *MockClient) SetProtoService(service any) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetProtoService", service)
 }

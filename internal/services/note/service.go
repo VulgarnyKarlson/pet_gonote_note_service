@@ -2,6 +2,7 @@ package note
 
 import (
 	"context"
+	"strconv"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
@@ -63,11 +64,15 @@ func (s *serviceImpl) ReadByID(ctx context.Context, user *domain.User, id string
 	if id == "" {
 		return nil, customerrors.ErrInvalidNoteID
 	}
-	return s.repo.ReadNoteByID(ctx, user, id)
+	idUint, err := strconv.ParseUint(id, 10, 64)
+	if err != nil || idUint == 0 {
+		return nil, customerrors.ErrInvalidNoteID
+	}
+	return s.repo.ReadNoteByID(ctx, user, idUint)
 }
 
 func (s *serviceImpl) Update(ctx context.Context, user *domain.User, note *domain.Note) error {
-	if note.ID() == "" {
+	if note.ID() == 0 {
 		return customerrors.ErrInvalidNoteID
 	}
 	return s.repo.UpdateNote(ctx, user, note)
@@ -77,7 +82,11 @@ func (s *serviceImpl) Delete(ctx context.Context, user *domain.User, id string) 
 	if id == "" {
 		return false, customerrors.ErrInvalidNoteID
 	}
-	return s.repo.DeleteNote(ctx, user, id)
+	idUint, err := strconv.ParseUint(id, 10, 64)
+	if err != nil || idUint == 0 {
+		return false, customerrors.ErrInvalidNoteID
+	}
+	return s.repo.DeleteNote(ctx, user, idUint)
 }
 
 func (s *serviceImpl) Search(

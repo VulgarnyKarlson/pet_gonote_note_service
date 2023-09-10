@@ -41,7 +41,7 @@ func NewConfig() (ResultConfig, error) {
 }
 
 func getFilePath() (string, error) {
-	flag.String("config", "./config/example_config.yaml", "config file path")
+	flag.String("config", "./config/local_config.yaml", "config file path")
 
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()

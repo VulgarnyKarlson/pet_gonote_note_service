@@ -23,11 +23,13 @@
 - [x] DDD
 - [x] CQRS
 - [x] Pre-commit hooks + golangci-lint
+- [x] DB optimization ( indexes, batch insert low memory stream )
 
 
 ### Installation
 ```bash
 make bin-deps
+make gen
 make up-build
 make up-services
 make migrate-up

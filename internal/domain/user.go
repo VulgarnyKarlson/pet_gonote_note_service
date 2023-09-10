@@ -1,22 +1,22 @@
 package domain
 
 type User struct {
-	id       string
+	id       uint64
 	userName string
 }
 
-func NewUser(id, userName string) *User {
+func NewUser(id uint64, userName string) *User {
 	return &User{
 		id:       id,
 		userName: userName,
 	}
 }
 
-func (u *User) ID() string {
+func (u *User) ID() uint64 {
 	return u.id
 }
 
-func (u *User) SetID(id string) {
+func (u *User) SetID(id uint64) {
 	u.id = id
 }
 

@@ -49,7 +49,7 @@ func (mr *MockRepositoryMockRecorder) CreateNote(ctx, st interface{}) *gomock.Ca
 }
 
 // DeleteNote mocks base method.
-func (m *MockRepository) DeleteNote(ctx context.Context, user *domain.User, id string) (bool, error) {
+func (m *MockRepository) DeleteNote(ctx context.Context, user *domain.User, id uint64) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteNote", ctx, user, id)
 	ret0, _ := ret[0].(bool)
@@ -64,7 +64,7 @@ func (mr *MockRepositoryMockRecorder) DeleteNote(ctx, user, id interface{}) *gom
 }
 
 // ReadNoteByID mocks base method.
-func (m *MockRepository) ReadNoteByID(ctx context.Context, user *domain.User, id string) (*domain.Note, error) {
+func (m *MockRepository) ReadNoteByID(ctx context.Context, user *domain.User, id uint64) (*domain.Note, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReadNoteByID", ctx, user, id)
 	ret0, _ := ret[0].(*domain.Note)

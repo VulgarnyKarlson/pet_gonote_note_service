@@ -16,7 +16,7 @@ func (s *Impl) InProxyWrite(note *domain.Note) {
 	s.inProxy <- note
 }
 
-func (s *Impl) OutWrite(note string) {
+func (s *Impl) OutWrite(note uint64) {
 	if s.isClosed {
 		return
 	}

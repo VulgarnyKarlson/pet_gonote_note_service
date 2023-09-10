@@ -10,13 +10,13 @@ import (
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
-func (r *repositoryImpl) DeleteNote(ctx context.Context, user *domain.User, id string) (bool, error) {
+func (r *repositoryImpl) DeleteNote(ctx context.Context, user *domain.User, id uint64) (bool, error) {
 	var isDeleted bool
 	err := r.db.BeginFunc(ctx, func(tx pgx.Tx) error {
 		psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 		query, args, err := psql.Delete("notes").
-			Where(squirrel.Eq{"id": id, "user_id": user.ID()}).
+			Where(squirrel.Eq{"note_id": id, "user_id": user.ID()}).
 			ToSql()
 
 		if err != nil {

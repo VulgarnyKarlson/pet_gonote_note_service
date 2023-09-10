@@ -12,7 +12,7 @@ import (
 )
 
 func noteHTTPToDomain(n *noteRequest) (*domain.Note, error) {
-	return domain.NewNote(n.ID, "", n.Title, n.Content)
+	return domain.NewNote(n.ID, 0, n.Title, n.Content)
 }
 
 func searchCriteriaHTTPToDomain(s *searchNoteRequest) (*domain.SearchCriteria, error) {

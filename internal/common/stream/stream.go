@@ -24,8 +24,6 @@ type Stream interface {
 	InProxyClose()
 	OutClose()
 	ErrClose()
-	SetUser(user *domain.User)
-	User() *domain.User
 }
 
 type Impl struct {
@@ -37,7 +35,6 @@ type Impl struct {
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
 	isClosed      bool
-	user          *domain.User
 }
 
 func NewStream(originalCtx context.Context) (*Impl, context.Context) {

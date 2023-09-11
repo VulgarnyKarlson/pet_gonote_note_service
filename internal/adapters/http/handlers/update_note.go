@@ -18,7 +18,7 @@ func (h *NoteHandlers) UpdateNote(r *http.Request) (*adapterHTTP.Response, error
 	st, ctx := stream.NewStream(r.Context())
 	defer st.Destroy()
 	go func() {
-		err := readNotes(r.Body, st)
+		err := readNotes(r.Body, st, user)
 		if err != nil {
 			st.Fail(err)
 		}

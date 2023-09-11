@@ -30,24 +30,24 @@ func TestReadNotes(t *testing.T) {
 		{
 			name: "valid json",
 			inputjson: `[{"id": 1, "user_id": "user1", "title": "Note 1", "content": "Content 1"},
-				  {"id": 2, "user_id": "user2", "title": "Note 2", "content": "Content 2"}]`,
+				  {"id": 2, "user_id": 1, "title": "Note 2", "content": "Content 2"}]`,
 			writeCount:  2,
 			expectedErr: nil,
 		},
 		{
 			name:        "invalid json - no open delimiter",
-			inputjson:   `{"id": 1, "user_id": "user1", "title": "Note 1", "content": "Content 1"}]`,
+			inputjson:   `{"id": 1, "user_id": 1, "title": "Note 1", "content": "Content 1"}]`,
 			expectedErr: customerrors.ErrInvalidJSONOpenDelimiter,
 		},
 		{
 			name:        "invalid json - no close delimiter",
-			inputjson:   `[{"id": 1, "user_id": "user1", "title": "Note 1", "content": "Content 1"}`,
+			inputjson:   `[{"id": 1, "user_id": 1, "title": "Note 1", "content": "Content 1"}`,
 			writeCount:  1,
 			expectedErr: customerrors.ErrInvalidJSONCloseDelimiter,
 		},
 		{
 			name:        "invalid json",
-			inputjson:   `[{"id": 1, "user_id": "user1", title": "Note 1", "content": "Content 1"}]`,
+			inputjson:   `[{"id": 1, "user_id": 1, title": "Note 1", "content": "Content 1"}]`,
 			expectedErr: customerrors.ErrInvalidJSON,
 		},
 	}
@@ -63,7 +63,7 @@ func TestReadNotes(t *testing.T) {
 
 			syncCh := make(chan struct{})
 			go func() {
-				err := readNotes(reader, mockStream)
+				err := readNotes(reader, mockStream, domain.NewUser(1, "user1"))
 				assert.Equal(t, tc.expectedErr, err)
 				close(syncCh)
 			}()

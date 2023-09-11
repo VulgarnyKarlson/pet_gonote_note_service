@@ -97,7 +97,6 @@ func TestNoteService_Create(t *testing.T) {
 			st.EXPECT().InProxyRead().Return(proxyWriteChan).AnyTimes()
 			st.EXPECT().InRead().Return(proxyWriteChan).AnyTimes()
 			st.EXPECT().InProxyWrite(gomock.Any()).Times(tc.proxyWriteCount)
-			st.EXPECT().User().Return(domain.NewUser(1, "")).AnyTimes()
 			go func() {
 				for _, note := range tc.notes {
 					proxyWriteChan <- note

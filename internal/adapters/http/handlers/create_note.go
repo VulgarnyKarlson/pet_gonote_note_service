@@ -17,10 +17,10 @@ type сreateNoteResponse struct {
 func (h *NoteHandlers) CreateNote(r *http.Request) (*adapterHTTP.Response, error) {
 	st, ctx := stream.NewStream(r.Context())
 	defer st.Destroy()
-	st.SetUser(r.Context().Value(adapterHTTP.UserCtxKey).(*domain.User))
+	user := r.Context().Value(adapterHTTP.UserCtxKey).(*domain.User)
 	h.noteServicePort.Create(ctx, st)
 	go func() {
-		err := readNotes(r.Body, st)
+		err := readNotes(r.Body, st, user)
 		if err != nil {
 			st.Fail(err)
 		}

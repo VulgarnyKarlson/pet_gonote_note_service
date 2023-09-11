@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
@@ -78,15 +77,14 @@ func (r *repositoryImpl) insertBatch(
 			}
 			note.SetID(noteID)
 		}
-		note.SetUserID(st.User().ID())
 		domainNote := noteDomainToDBModel(note)
 		mBatch = append(mBatch, domainNote)
 	}
 
 	for _, note := range mBatch {
 		query, args, _ := psql.Insert("notes").
-			Columns("note_id", "user_id", "title", "content", "created_at", "updated_at").
-			Values(note.ID, st.User().ID(), note.Title, note.Content, note.CreatedAt.Format(time.RFC3339), note.UpdatedAt.Format(time.RFC3339)).
+			Columns("note_id", "user_id", "title", "content").
+			Values(note.ID, note.UserID, note.Title, note.Content).
 			Suffix("ON CONFLICT DO NOTHING").
 			ToSql()
 

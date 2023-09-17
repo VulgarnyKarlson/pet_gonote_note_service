@@ -11,15 +11,16 @@ import (
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/redis"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/circuitbreaker"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain/tests"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/proto"
 )
 
 func TestValidateToken(t *testing.T) {
-	domain.TestIsUnit(t)
+	tests.TestIsUnit(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	var tests = []struct {
+	var testCases = []struct {
 		name           string
 		token          string
 		mockResp       *proto.ValidateTokenResponse
@@ -69,7 +70,7 @@ func TestValidateToken(t *testing.T) {
 	}
 	wrapper.SetProtoService(mockAuthService)
 
-	for _, tt := range tests {
+	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			mockAuthService.EXPECT().ValidateToken(
 				gomock.Any(),

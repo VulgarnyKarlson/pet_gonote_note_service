@@ -7,11 +7,11 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain/tests"
 )
 
 func TestNewCircuitBreaker(t *testing.T) {
-	domain.TestIsUnit(t)
+	tests.TestIsUnit(t)
 	logger := zerolog.New(nil)
 	cfg := &Config{
 		RecordLength:     10,
@@ -29,7 +29,7 @@ func TestNewCircuitBreaker(t *testing.T) {
 }
 
 func TestAttemptWithClosedState(t *testing.T) {
-	domain.TestIsUnit(t)
+	tests.TestIsUnit(t)
 	logger := zerolog.New(nil)
 	cfg := &Config{Timeout: 1 * time.Second}
 	cb := newCircuitBreaker(cfg, &logger)
@@ -41,7 +41,7 @@ func TestAttemptWithClosedState(t *testing.T) {
 }
 
 func TestAttemptWithOpenState(t *testing.T) {
-	domain.TestIsUnit(t)
+	tests.TestIsUnit(t)
 	logger := zerolog.New(nil)
 	cfg := &Config{Timeout: 1 * time.Second}
 	cb := newCircuitBreaker(cfg, &logger)
@@ -55,7 +55,7 @@ func TestAttemptWithOpenState(t *testing.T) {
 }
 
 func TestFail(t *testing.T) {
-	domain.TestIsUnit(t)
+	tests.TestIsUnit(t)
 	logger := zerolog.New(nil)
 	cfg := &Config{
 		RecordLength: 5,
@@ -73,7 +73,7 @@ func TestFail(t *testing.T) {
 }
 
 func TestSuccess(t *testing.T) {
-	domain.TestIsUnit(t)
+	tests.TestIsUnit(t)
 	logger := zerolog.New(nil)
 	cfg := &Config{
 		RecordLength:     5,

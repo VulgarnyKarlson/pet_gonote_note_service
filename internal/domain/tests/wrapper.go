@@ -1,4 +1,4 @@
-package domain
+package tests
 
 import (
 	"os"

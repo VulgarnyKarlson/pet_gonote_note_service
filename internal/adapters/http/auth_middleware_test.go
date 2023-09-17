@@ -12,17 +12,18 @@ import (
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/auth"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain/tests"
 )
 
 func TestAuthMiddleware(t *testing.T) {
-	domain.TestIsUnit(t)
+	tests.TestIsUnit(t)
 	defer goleak.VerifyNone(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockAuthClient := auth.NewMockClient(ctrl)
 
-	tests := []struct {
+	testCases := []struct {
 		name                 string
 		givenToken           string
 		mockValidationResult *auth.ValidateTokenResponse
@@ -62,7 +63,7 @@ func TestAuthMiddleware(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			server := &Server{auth: mockAuthClient}
 

@@ -13,14 +13,13 @@ import (
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain/tests"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/note/repository"
 )
 
 func TestNoteService_Create(t *testing.T) {
-	domain.TestIsUnit(t)
+	tests.TestIsUnit(t)
 	defer goleak.VerifyNone(t)
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 	var mockRepo *repository.MockRepository
 	var st *stream.MockStream
 	cfg := &Config{
@@ -80,6 +79,8 @@ func TestNoteService_Create(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 			st = stream.NewMockStream(ctrl)
 			mockRepo = repository.NewMockRepository(ctrl)
 			mockRepo.EXPECT().CreateNote(
@@ -123,7 +124,7 @@ func TestNoteService_Create(t *testing.T) {
 }
 
 func TestNoteService_ReadByID(t *testing.T) {
-	domain.TestIsUnit(t)
+	tests.TestIsUnit(t)
 	defer goleak.VerifyNone(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -167,7 +168,7 @@ func TestNoteService_ReadByID(t *testing.T) {
 }
 
 func TestNoteService_Update(t *testing.T) {
-	domain.TestIsUnit(t)
+	tests.TestIsUnit(t)
 	defer goleak.VerifyNone(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -219,7 +220,7 @@ func TestNoteService_Update(t *testing.T) {
 }
 
 func TestNoteService_Delete(t *testing.T) {
-	domain.TestIsUnit(t)
+	tests.TestIsUnit(t)
 	defer goleak.VerifyNone(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -263,7 +264,7 @@ func TestNoteService_Delete(t *testing.T) {
 }
 
 func TestNoteService_Search(t *testing.T) {
-	domain.TestIsUnit(t)
+	tests.TestIsUnit(t)
 	defer goleak.VerifyNone(t)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -32,7 +33,6 @@ func (r *repositoryImpl) UpdateNote(ctx context.Context, user *domain.User, note
 		var noteID uint64
 		for rows.Next() {
 			if scanErr := rows.Scan(&noteID); scanErr != nil {
-				r.logger.Err(scanErr).Msg("can't scan noteID")
 				return customerrors.ErrNotFoundNoteID
 			}
 		}
@@ -48,7 +48,7 @@ func (r *repositoryImpl) UpdateNote(ctx context.Context, user *domain.User, note
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("error creating transaction: %w", err)
+		return errors.Join(customerrors.ErrRepositoryError, err)
 	}
 	return nil
 }

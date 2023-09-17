@@ -8,6 +8,7 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
@@ -48,7 +49,7 @@ func (r *repositoryImpl) ReadNoteByID(ctx context.Context, user *domain.User, id
 		return nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error creating transaction: %w", err)
+		return nil, errors.Join(customerrors.ErrRepositoryError, err)
 	}
 
 	return note, nil

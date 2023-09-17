@@ -27,37 +27,24 @@ type Stream interface {
 }
 
 type Impl struct {
-	inChan        chan *domain.Note
-	inProxy       chan *domain.Note
-	outChan       chan uint64
-	errChan       chan error
-	err           error
-	ctx           context.Context
-	ctxCancelFunc context.CancelFunc
-	isClosed      bool
+	inChan   chan *domain.Note
+	inProxy  chan *domain.Note
+	outChan  chan uint64
+	errChan  chan error
+	err      error
+	ctx      context.Context
+	isClosed bool
 }
 
-func NewStream(originalCtx context.Context) (*Impl, context.Context) {
-	ctx, cancel := context.WithCancel(originalCtx)
+func NewStream(ctx context.Context) (*Impl, context.Context) {
 	s := &Impl{
-		inChan:        make(chan *domain.Note),
-		inProxy:       make(chan *domain.Note),
-		outChan:       make(chan uint64),
-		errChan:       make(chan error),
-		ctx:           ctx,
-		ctxCancelFunc: cancel,
+		inChan:  make(chan *domain.Note),
+		inProxy: make(chan *domain.Note),
+		outChan: make(chan uint64),
+		errChan: make(chan error),
+		ctx:     ctx,
 	}
 
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-s.Done():
-				return
-			}
-		}
-	}()
 	return s, ctx
 }
 
@@ -66,13 +53,6 @@ func (s *Impl) Close() {
 		return
 	}
 	s.isClosed = true
-	s.ctxCancel()
-}
-
-func (s *Impl) ctxCancel() {
-	if s.ctxCancelFunc != nil {
-		s.ctxCancelFunc()
-	}
 }
 
 func (s *Impl) Fail(err error) {
@@ -91,7 +71,6 @@ func (s *Impl) Done() <-chan struct{} {
 func (s *Impl) Destroy() {
 	s.isClosed = true
 	s.Drain()
-	s.ctxCancel()
 }
 
 func (s *Impl) Drain() {
@@ -118,7 +97,7 @@ func (s *Impl) Drain() {
 func (s *Impl) Err() error {
 	err := s.err
 	if err == nil {
-		err = s.ctx.Err()
+		err = context.Cause(s.ctx)
 	}
 	return err
 }

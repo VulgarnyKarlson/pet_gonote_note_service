@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
@@ -21,8 +22,6 @@ func (r *repositoryImpl) CreateNote(
 	loop:
 		for {
 			select {
-			case <-ctx.Done():
-				return ctx.Err()
 			case <-st.Done():
 				return nil
 			case note, ok := <-st.InProxyRead():
@@ -46,15 +45,10 @@ func (r *repositoryImpl) CreateNote(
 			}
 		}
 
-		if err := st.Err(); err != nil {
-			return err
-		}
-
-		return nil
+		return st.Err()
 	})
 	if err != nil {
-		r.logger.Err(err).Msg("error creating transaction")
-		st.Fail(customerrors.ErrRepositoryError)
+		st.Fail(errors.Join(customerrors.ErrRepositoryError, err))
 	}
 	st.OutClose()
 	st.Close()

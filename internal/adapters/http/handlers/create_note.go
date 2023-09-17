@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"context"
+	"errors"
 	"net/http"
 
 	adapterHTTP "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
@@ -31,15 +33,12 @@ func (h *NoteHandlers) CreateNote(r *http.Request) (*adapterHTTP.Response, error
 	for {
 		select {
 		case <-st.Done():
-			if err := st.Err(); err != nil {
-				if err.Error() == "context canceled" {
-					return nil, customerrors.ErrRequestCanceled
-				}
-				h.logger.Err(err).Msg("error while creating note")
-				return nil, err
+			err := st.Err()
+			if errors.Is(err, context.Canceled) {
+				return nil, customerrors.ErrRequestCanceled
 			}
+			return nil, err
 		case err := <-st.ErrChan():
-			h.logger.Err(err).Msg("error while creating note")
 			return nil, err
 		case noteID, ok := <-st.OutRead():
 			if ok {

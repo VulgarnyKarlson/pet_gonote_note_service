@@ -34,8 +34,6 @@ func (s *serviceImpl) Create(
 	go func() {
 		for {
 			select {
-			case <-ctx.Done():
-				return
 			case <-st.Done():
 				return
 			case note, ok := <-st.InRead():

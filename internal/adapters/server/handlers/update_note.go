@@ -39,15 +39,13 @@ func (h *updateNoteHandler) handle(r *http.Request) (*server.Response, error) {
 	updatesCounter := 0
 	for {
 		select {
-		case <-r.Context().Done():
-			return nil, customerrors.ErrBadRequest
-		case err := <-st.ErrChan():
-			return nil, err
 		case <-st.Done():
 			err := st.Err()
 			if errors.Is(err, context.Canceled) {
 				return nil, customerrors.ErrRequestCanceled
 			}
+			return nil, err
+		case err := <-st.ErrChan():
 			return nil, err
 		case note, ok := <-st.InRead():
 			if !ok {

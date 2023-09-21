@@ -41,7 +41,6 @@ func NewNoteApp() *fx.App {
 			handlers.RegisterCreateNote,
 			handlers.RegisterReadNote,
 			handlers.RegisterUpdateNote,
-			handlers.RegisterUpdateNote,
 			handlers.RegisterDeleteNote,
 			handlers.RegisterSearchNote,
 		),

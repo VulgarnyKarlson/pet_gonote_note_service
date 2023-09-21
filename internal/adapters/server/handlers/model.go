@@ -7,7 +7,7 @@ import (
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
 
-var activeMiddlewares = []string{middlewares.AuthID(), middlewares.LoggerID()}
+var activeMiddlewares = []string{middlewares.LoggerID(), middlewares.AuthID()}
 
 type noteRequest struct {
 	ID      uint64 `json:"id,omitempty"`

@@ -1,8 +1,6 @@
 package app
 
 import (
-	"context"
-
 	"github.com/rs/zerolog/log"
 	"go.uber.org/fx"
 
@@ -31,7 +29,6 @@ func NewNoteApp() *fx.App {
 			noteRepo.NewModule(),
 			note.NewModule(),
 			server.NewModule(),
-			handlers.NewModule(),
 		),
 		fx.Provide(
 			config.NewConfig,
@@ -40,36 +37,13 @@ func NewNoteApp() *fx.App {
 		),
 		fx.WithLogger(logger.WithZerolog(&log.Logger)),
 		fx.Invoke(middlewares.RegisterAuthMiddleware, middlewares.RegisterLoggerMiddleware),
-		fx.Invoke(initHTTPEndpoints),
+		fx.Invoke(
+			handlers.RegisterCreateNote,
+			handlers.RegisterReadNote,
+			handlers.RegisterUpdateNote,
+			handlers.RegisterUpdateNote,
+			handlers.RegisterDeleteNote,
+			handlers.RegisterSearchNote,
+		),
 	)
-}
-
-func initHTTPEndpoints(lx fx.Lifecycle, h *handlers.NoteHandlers, n server.Server) {
-	activeMiddlewares := []string{middlewares.AuthID(), middlewares.LoggerID()}
-	endpoints := []server.Endpoint{
-		{Method: "POST", Path: "/create", Middlewares: activeMiddlewares, Handler: h.CreateNote},
-		{Method: "GET", Path: "/read", Middlewares: activeMiddlewares, Handler: h.ReadNoteByID},
-		{Method: "POST", Path: "/update", Middlewares: activeMiddlewares, Handler: h.UpdateNote},
-		{Method: "POST", Path: "/delete", Middlewares: activeMiddlewares, Handler: h.DeleteNoteByID},
-		{Method: "GET", Path: "/search", Middlewares: activeMiddlewares, Handler: h.SearchNote},
-	}
-
-	for _, e := range endpoints {
-		n.AddEndpoint(e)
-	}
-
-	lx.Append(fx.Hook{
-		OnStart: func(ctx context.Context) error {
-			go func() {
-				err := n.Run()
-				if err != nil {
-					log.Fatal().Err(err).Msgf("Error while starting http server")
-				}
-			}()
-			return nil
-		},
-		OnStop: func(ctx context.Context) error {
-			return n.Stop()
-		},
-	})
 }

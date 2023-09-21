@@ -3,11 +3,23 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/pkg/errors"
+
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/server"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/server/middlewares"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
+	noteService "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/note"
 )
+
+type searchNoteHandler struct {
+	noteServicePort noteService.Service
+}
+
+func RegisterSearchNote(s server.Server, n noteService.Service) {
+	h := searchNoteHandler{noteServicePort: n}
+	s.AddEndpoint(server.Endpoint{Method: "GET", Path: "/search", Middlewares: activeMiddlewares, Handler: h.handle})
+}
 
 type searchNoteRequest struct {
 	Title    string
@@ -21,7 +33,7 @@ type searcNoteResponse struct {
 	Total int             `json:"total"`
 }
 
-func (h *NoteHandlers) SearchNote(r *http.Request) (*server.Response, error) {
+func (h *searchNoteHandler) handle(r *http.Request) (*server.Response, error) {
 	var req searchNoteRequest
 	req.Title = r.URL.Query().Get("title")
 	req.Content = r.URL.Query().Get("content")
@@ -29,14 +41,12 @@ func (h *NoteHandlers) SearchNote(r *http.Request) (*server.Response, error) {
 	req.ToDate = r.URL.Query().Get("to_date")
 	searchNoteDomain, err := searchCriteriaHTTPToDomain(&req)
 	if err != nil {
-		h.logger.Err(err).Msg("error while converting search criteria")
-		return nil, err
+		return nil, errors.Wrap(err, "error while converting search criteria")
 	}
 
 	user := r.Context().Value(middlewares.UserCtxKey).(*domain.User)
 	notes, err := h.noteServicePort.Search(r.Context(), user, searchNoteDomain)
 	if err != nil {
-		h.logger.Err(err).Msg("error while converting search criteria")
 		return nil, customerrors.ErrInternalServer
 	}
 

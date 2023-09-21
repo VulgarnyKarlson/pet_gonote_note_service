@@ -10,14 +10,24 @@ import (
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/services/note"
 )
+
+type createNoteHandler struct {
+	noteServicePort note.Service
+}
+
+func RegisterCreateNote(s server.Server, n note.Service) {
+	h := createNoteHandler{noteServicePort: n}
+	s.AddEndpoint(server.Endpoint{Method: "POST", Path: "/create", Middlewares: activeMiddlewares, Handler: h.handle})
+}
 
 type сreateNoteResponse struct {
 	NoteIDs    []uint64 `json:"note_id"`
 	TotalNotes int      `json:"total_notes"`
 }
 
-func (h *NoteHandlers) CreateNote(r *http.Request) (*server.Response, error) {
+func (h *createNoteHandler) handle(r *http.Request) (*server.Response, error) {
 	st, ctx := stream.NewStream(r.Context())
 	defer st.Destroy()
 	user := r.Context().Value(middlewares.UserCtxKey).(*domain.User)

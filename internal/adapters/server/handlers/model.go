@@ -3,8 +3,11 @@ package handlers
 import (
 	"time"
 
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/server/middlewares"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
+
+var activeMiddlewares = []string{middlewares.AuthID(), middlewares.LoggerID()}
 
 type noteRequest struct {
 	ID      uint64 `json:"id,omitempty"`

@@ -1,4 +1,4 @@
-package http
+package server
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ type Config struct {
 
 func NewConfig(provider config.Provider) (*Config, error) {
 	var cfg Config
-	err := provider.Get("Adapters.HTTP").Populate(&cfg)
+	err := provider.Get("Adapters.Server").Populate(&cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to http get config: %w", err)
 	}

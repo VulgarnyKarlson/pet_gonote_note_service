@@ -1,4 +1,4 @@
-package http
+package middlewares
 
 import (
 	"context"
@@ -65,7 +65,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			server := &Server{auth: mockAuthClient}
+			middleWare := AuthMiddleware{auth: mockAuthClient}
 
 			req, err := http.NewRequestWithContext(context.TODO(), "GET", "/somepath", http.NoBody)
 			assert.NoError(t, err)
@@ -83,7 +83,7 @@ func TestAuthMiddleware(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			})
-			server.AuthMiddleware(handler).ServeHTTP(rr, req)
+			middleWare.Middleware(handler).ServeHTTP(rr, req)
 
 			assert.Equal(t, tt.expectedStatusCode, rr.Code)
 		})

@@ -1,4 +1,4 @@
-package http
+package server
 
 import (
 	"encoding/json"
@@ -14,21 +14,22 @@ import (
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 )
 
-type Server struct {
+type Wrapper struct {
 	logger      *zerolog.Logger
 	cfg         *Config
 	auth        auth.Client
 	router      *mux.Router
+	middleWares map[string]mux.MiddlewareFunc
 	httpAdapter http.Server
 }
 
-func NewServer(logger *zerolog.Logger, cfg *Config, authClient auth.Client) *Server {
-	router := mux.NewRouter()
-	s := &Server{
-		logger: logger,
-		cfg:    cfg,
-		auth:   authClient,
-		router: router,
+func NewServer(logger *zerolog.Logger, cfg *Config, authClient auth.Client, router *mux.Router) Server {
+	s := &Wrapper{
+		logger:      logger,
+		cfg:         cfg,
+		auth:        authClient,
+		router:      router,
+		middleWares: make(map[string]mux.MiddlewareFunc),
 		httpAdapter: http.Server{
 			ReadTimeout: time.Duration(cfg.ReadTimeout) * time.Second,
 			Addr:        cfg.Addr,
@@ -39,7 +40,7 @@ func NewServer(logger *zerolog.Logger, cfg *Config, authClient auth.Client) *Ser
 	return s
 }
 
-func (s *Server) Run() error {
+func (s *Wrapper) Run() error {
 	s.logger.Info().Msgf("Starting HTTP server on %s", s.httpAdapter.Addr)
 	if err := s.httpAdapter.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		s.logger.Fatal().Msgf("Failed to listen and serve: %v", err)
@@ -47,7 +48,7 @@ func (s *Server) Run() error {
 	return nil
 }
 
-func (s *Server) Stop() error {
+func (s *Wrapper) Stop() error {
 	s.logger.Info().Msg("Stopping HTTP server")
 	if err := s.httpAdapter.Shutdown(nil); err != nil {
 		return fmt.Errorf("failed to shutdown HTTP server: %v", err)
@@ -55,8 +56,8 @@ func (s *Server) Stop() error {
 	return nil
 }
 
-func (s *Server) handlerErrors(h func(*http.Request) (*Response, error)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (s *Wrapper) handlerErrors(h func(*http.Request) (*Response, error)) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response, err := h(r)
 		if err != nil {
 			var customErr *customerrors.HTTPError
@@ -71,5 +72,5 @@ func (s *Server) handlerErrors(h func(*http.Request) (*Response, error)) http.Ha
 			w.WriteHeader(response.Status)
 		}
 		_ = json.NewEncoder(w).Encode(response)
-	}
+	})
 }

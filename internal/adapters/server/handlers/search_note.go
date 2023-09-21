@@ -3,7 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	adapterHTTP "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/server"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/server/middlewares"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
 )
@@ -20,7 +21,7 @@ type searcNoteResponse struct {
 	Total int             `json:"total"`
 }
 
-func (h *NoteHandlers) SearchNote(r *http.Request) (*adapterHTTP.Response, error) {
+func (h *NoteHandlers) SearchNote(r *http.Request) (*server.Response, error) {
 	var req searchNoteRequest
 	req.Title = r.URL.Query().Get("title")
 	req.Content = r.URL.Query().Get("content")
@@ -32,7 +33,7 @@ func (h *NoteHandlers) SearchNote(r *http.Request) (*adapterHTTP.Response, error
 		return nil, err
 	}
 
-	user := r.Context().Value(adapterHTTP.UserCtxKey).(*domain.User)
+	user := r.Context().Value(middlewares.UserCtxKey).(*domain.User)
 	notes, err := h.noteServicePort.Search(r.Context(), user, searchNoteDomain)
 	if err != nil {
 		h.logger.Err(err).Msg("error while converting search criteria")
@@ -53,5 +54,5 @@ func (h *NoteHandlers) SearchNote(r *http.Request) (*adapterHTTP.Response, error
 		Total: len(noteHTTPresp),
 	}
 
-	return &adapterHTTP.Response{Data: resp, Status: http.StatusOK}, nil
+	return &server.Response{Data: resp, Status: http.StatusOK}, nil
 }

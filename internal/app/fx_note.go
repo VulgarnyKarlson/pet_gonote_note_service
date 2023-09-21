@@ -7,10 +7,11 @@ import (
 	"go.uber.org/fx"
 
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/auth"
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http/handlers"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/postgres"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/redis"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/server"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/server/handlers"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/server/middlewares"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/circuitbreaker"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/logger"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/config"
@@ -29,7 +30,7 @@ func NewNoteApp() *fx.App {
 			noteoutbox.NewModule(),
 			noteRepo.NewModule(),
 			note.NewModule(),
-			http.NewModule(),
+			server.NewModule(),
 			handlers.NewModule(),
 		),
 		fx.Provide(
@@ -38,17 +39,19 @@ func NewNoteApp() *fx.App {
 			logger.NewConfig,
 		),
 		fx.WithLogger(logger.WithZerolog(&log.Logger)),
+		fx.Invoke(middlewares.RegisterAuthMiddleware, middlewares.RegisterLoggerMiddleware),
 		fx.Invoke(initHTTPEndpoints),
 	)
 }
 
-func initHTTPEndpoints(lx fx.Lifecycle, h *handlers.NoteHandlers, n *http.Server) {
-	endpoints := []http.Endpoint{
-		{Method: "POST", Path: "/create", Auth: true, Handler: h.CreateNote},
-		{Method: "GET", Path: "/read", Auth: true, Handler: h.ReadNoteByID},
-		{Method: "POST", Path: "/update", Auth: true, Handler: h.UpdateNote},
-		{Method: "POST", Path: "/delete", Auth: true, Handler: h.DeleteNoteByID},
-		{Method: "GET", Path: "/search", Auth: true, Handler: h.SearchNote},
+func initHTTPEndpoints(lx fx.Lifecycle, h *handlers.NoteHandlers, n server.Server) {
+	activeMiddlewares := []string{middlewares.AuthID(), middlewares.LoggerID()}
+	endpoints := []server.Endpoint{
+		{Method: "POST", Path: "/create", Middlewares: activeMiddlewares, Handler: h.CreateNote},
+		{Method: "GET", Path: "/read", Middlewares: activeMiddlewares, Handler: h.ReadNoteByID},
+		{Method: "POST", Path: "/update", Middlewares: activeMiddlewares, Handler: h.UpdateNote},
+		{Method: "POST", Path: "/delete", Middlewares: activeMiddlewares, Handler: h.DeleteNoteByID},
+		{Method: "GET", Path: "/search", Middlewares: activeMiddlewares, Handler: h.SearchNote},
 	}
 
 	for _, e := range endpoints {

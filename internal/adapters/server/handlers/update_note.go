@@ -5,7 +5,8 @@ import (
 	"errors"
 	"net/http"
 
-	adapterHTTP "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/server"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/server/middlewares"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
@@ -15,8 +16,8 @@ type updateNoteResponse struct {
 	TotalNotes int `json:"total_notes"`
 }
 
-func (h *NoteHandlers) UpdateNote(r *http.Request) (*adapterHTTP.Response, error) {
-	user := r.Context().Value(adapterHTTP.UserCtxKey).(*domain.User)
+func (h *NoteHandlers) UpdateNote(r *http.Request) (*server.Response, error) {
+	user := r.Context().Value(middlewares.UserCtxKey).(*domain.User)
 	st, ctx := stream.NewStream(r.Context())
 	defer st.Destroy()
 	go func() {
@@ -42,7 +43,7 @@ func (h *NoteHandlers) UpdateNote(r *http.Request) (*adapterHTTP.Response, error
 			return nil, err
 		case note, ok := <-st.InRead():
 			if !ok {
-				return &adapterHTTP.Response{Data: &updateNoteResponse{TotalNotes: updatesCounter}, Status: http.StatusOK}, nil
+				return &server.Response{Data: &updateNoteResponse{TotalNotes: updatesCounter}, Status: http.StatusOK}, nil
 			}
 			updatesCounter++
 			err := h.noteServicePort.Update(ctx, user, note)

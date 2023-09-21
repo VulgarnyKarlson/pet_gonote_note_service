@@ -8,7 +8,7 @@ Adapters:
   Auth:
     Address: "localhost:5000"
     BackupStorageTime: 60
-  HTTP:
+  Server:
     Addr: :3001
     ReadTimeout: 5
   RabbitMQ:

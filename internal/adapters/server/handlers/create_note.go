@@ -5,7 +5,8 @@ import (
 	"errors"
 	"net/http"
 
-	adapterHTTP "gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/http"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/server"
+	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/server/middlewares"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/stream"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/domain"
@@ -16,10 +17,10 @@ type сreateNoteResponse struct {
 	TotalNotes int      `json:"total_notes"`
 }
 
-func (h *NoteHandlers) CreateNote(r *http.Request) (*adapterHTTP.Response, error) {
+func (h *NoteHandlers) CreateNote(r *http.Request) (*server.Response, error) {
 	st, ctx := stream.NewStream(r.Context())
 	defer st.Destroy()
-	user := r.Context().Value(adapterHTTP.UserCtxKey).(*domain.User)
+	user := r.Context().Value(middlewares.UserCtxKey).(*domain.User)
 	h.noteServicePort.Create(ctx, st)
 	go func() {
 		err := readNotes(r.Body, st, user)
@@ -45,7 +46,7 @@ func (h *NoteHandlers) CreateNote(r *http.Request) (*adapterHTTP.Response, error
 				noteCounter++
 				noteIDs = append(noteIDs, noteID)
 			} else {
-				return &adapterHTTP.Response{
+				return &server.Response{
 					Data: &сreateNoteResponse{
 						TotalNotes: noteCounter,
 						NoteIDs:    noteIDs,

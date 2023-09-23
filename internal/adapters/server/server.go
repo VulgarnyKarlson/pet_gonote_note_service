@@ -10,24 +10,21 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 
-	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/adapters/auth"
 	"gitlab.karlson.dev/individual/pet_gonote/note_service/internal/common/customerrors"
 )
 
 type Wrapper struct {
 	logger      *zerolog.Logger
 	cfg         *Config
-	auth        auth.Client
 	router      *mux.Router
 	middleWares map[string]mux.MiddlewareFunc
 	httpAdapter http.Server
 }
 
-func NewServer(logger *zerolog.Logger, cfg *Config, authClient auth.Client, router *mux.Router) Server {
+func NewServer(logger *zerolog.Logger, cfg *Config, router *mux.Router) Server {
 	s := &Wrapper{
 		logger:      logger,
 		cfg:         cfg,
-		auth:        authClient,
 		router:      router,
 		middleWares: make(map[string]mux.MiddlewareFunc),
 		httpAdapter: http.Server{
